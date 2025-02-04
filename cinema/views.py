@@ -1,11 +1,11 @@
 from datetime import datetime
-
+from django.shortcuts import get_list_or_404
 from django.db.models import F, Count
-from rest_framework import viewsets
+from rest_framework import viewsets, permissions
 from rest_framework.pagination import PageNumberPagination
-
+from rest_framework.exceptions import NotFound
 from cinema.models import Genre, Actor, CinemaHall, Movie, MovieSession, Order
-
+from user.permissions import AdminOrAuthenticatedReadOnly
 from cinema.serializers import (
     GenreSerializer,
     ActorSerializer,
@@ -24,21 +24,56 @@ from cinema.serializers import (
 class GenreViewSet(viewsets.ModelViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
+    permission_classes = (AdminOrAuthenticatedReadOnly,)
+    http_method_names = ["get", "post"]
+
+    def update(self, request, *args, **kwargs):
+        raise NotFound()
+
+    def destroy(self, request, *args, **kwargs):
+        raise NotFound()
+
+    def retrieve(self, request, *args, **kwargs):
+        raise NotFound()
 
 
 class ActorViewSet(viewsets.ModelViewSet):
     queryset = Actor.objects.all()
     serializer_class = ActorSerializer
+    permission_classes = (AdminOrAuthenticatedReadOnly,)
+    http_method_names = ["get", "post"]
+
+    def update(self, request, *args, **kwargs):
+        raise NotFound()
+
+    def destroy(self, request, *args, **kwargs):
+        raise NotFound()
+
+    def retrieve(self, request, *args, **kwargs):
+        raise NotFound()
 
 
 class CinemaHallViewSet(viewsets.ModelViewSet):
     queryset = CinemaHall.objects.all()
     serializer_class = CinemaHallSerializer
+    permission_classes = (AdminOrAuthenticatedReadOnly,)
+    http_method_names = ["get", "post"]
+
+    def update(self, request, *args, **kwargs):
+        raise NotFound()
+
+    def destroy(self, request, *args, **kwargs):
+        raise NotFound()
+
+    def retrieve(self, request, *args, **kwargs):
+        raise NotFound()
 
 
 class MovieViewSet(viewsets.ModelViewSet):
     queryset = Movie.objects.prefetch_related("genres", "actors")
     serializer_class = MovieSerializer
+    permission_classes = (AdminOrAuthenticatedReadOnly,)
+    http_method_names = ["get", "post"]
 
     @staticmethod
     def _params_to_ints(qs):
@@ -87,6 +122,8 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
         )
     )
     serializer_class = MovieSessionSerializer
+    permission_classes = (AdminOrAuthenticatedReadOnly,)
+    http_method_names = ["get", "post", "patch"]
 
     def get_queryset(self):
         date = self.request.query_params.get("date")
@@ -124,6 +161,8 @@ class OrderViewSet(viewsets.ModelViewSet):
     )
     serializer_class = OrderSerializer
     pagination_class = OrderPagination
+    permission_classes = (permissions.IsAuthenticated,)
+    http_method_names = ["get", "post", "put", "delete"]
 
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user)
@@ -136,3 +175,12 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+    def update(self, request, *args, **kwargs):
+        raise NotFound("Order not found.")
+
+    def destroy(self, request, *args, **kwargs):
+        raise NotFound("Order not found.")
+
+    def retrieve(self, request, *args, **kwargs):
+        raise NotFound("Order not found.")
