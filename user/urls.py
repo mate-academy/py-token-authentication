@@ -12,11 +12,11 @@ urlpatterns = [
     path(
         "register/",
         CreateUserView.as_view(),
-        name="user-create"
+        name="create"
     ),
     path(
         "login/",
         LoginUserView.as_view(),
-        name="user-login"
+        name="login"
     ),
 ]
