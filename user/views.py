@@ -1,4 +1,5 @@
-from rest_framework import generics, settings
+from rest_framework import generics
+from rest_framework.settings import api_settings
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.permissions import IsAuthenticated
@@ -20,4 +21,4 @@ class UserRetrieveUpdateView(generics.RetrieveUpdateAPIView):
 
 
 class UserTokenCreateView(ObtainAuthToken):
-    renderer_classes = settings.api_settings.DEFAULT_RENDERER_CLASSES
+    renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
