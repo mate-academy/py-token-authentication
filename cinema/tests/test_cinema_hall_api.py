@@ -88,7 +88,6 @@ class AdminCinemaHallApiTests(TestCase):
 
     def test_retrieve_cinema_hall(self):
         sample_cinema_hall()
-
         response = self.client.get(f"{CINEMA_HALL_URL}1/")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
