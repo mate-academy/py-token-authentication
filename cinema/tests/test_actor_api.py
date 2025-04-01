@@ -83,6 +83,7 @@ class AdminActorApiTests(TestCase):
 
     def test_retrieve_actor(self):
         sample_actor()
+        print(sample_actor())
 
         response = self.client.get(f"{ACTOR_URL}1/")
 
