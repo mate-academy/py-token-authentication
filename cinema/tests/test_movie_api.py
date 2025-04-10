@@ -1,12 +1,11 @@
 from django.test import TestCase
 from django.urls import reverse
-
-from rest_framework.test import APIClient
 from rest_framework import status
+from rest_framework.test import APIClient
 
-from cinema.models import Movie, Genre, Actor
-from user.tests.test_user_api import create_user
+from cinema.models import Actor, Genre, Movie
 from cinema.serializers import MovieDetailSerializer
+from user.tests.test_user_api import create_user
 
 MOVIE_URL = reverse("cinema:movie-list")
 
@@ -65,6 +64,7 @@ class PrivateMovieApiTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, serializer.data)
+
 
     def test_post_movie(self):
         payload = {
