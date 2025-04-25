@@ -1,9 +1,12 @@
 from datetime import datetime
 
 from django.db.models import F, Count
-from rest_framework import viewsets
+from rest_framework import viewsets, generics
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
 
+from cinema.mixins import DefaultAuthMixin
 from cinema.models import Genre, Actor, CinemaHall, Movie, MovieSession, Order
 
 from cinema.serializers import (
@@ -19,24 +22,27 @@ from cinema.serializers import (
     OrderSerializer,
     OrderListSerializer,
 )
+from user.permissions import IsAdminOrIfAuthenticatedReadOnly
 
 
-class GenreViewSet(viewsets.ModelViewSet):
+class GenreListCreateView(DefaultAuthMixin, generics.ListCreateAPIView):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
 
-class ActorViewSet(viewsets.ModelViewSet):
+class ActorListCreateView(DefaultAuthMixin, generics.ListCreateAPIView):
     queryset = Actor.objects.all()
     serializer_class = ActorSerializer
 
 
-class CinemaHallViewSet(viewsets.ModelViewSet):
+class CinemaHallListCreateView(DefaultAuthMixin, generics.ListCreateAPIView):
     queryset = CinemaHall.objects.all()
     serializer_class = CinemaHallSerializer
 
 
-class MovieViewSet(viewsets.ModelViewSet):
+class MovieListCreateView(DefaultAuthMixin, generics.ListCreateAPIView):
     queryset = Movie.objects.prefetch_related("genres", "actors")
     serializer_class = MovieSerializer
 
@@ -67,16 +73,24 @@ class MovieViewSet(viewsets.ModelViewSet):
         return queryset.distinct()
 
     def get_serializer_class(self):
-        if self.action == "list":
+        if self.request.method.lower() == "get":
             return MovieListSerializer
 
-        if self.action == "retrieve":
+        return MovieSerializer
+
+
+class MovieRetrieveView(DefaultAuthMixin, generics.RetrieveAPIView):
+    queryset = Movie.objects.prefetch_related("genres", "actors")
+    serializer_class = MovieSerializer
+
+    def get_serializer_class(self):
+        if self.request.method.lower() == "get":
             return MovieDetailSerializer
 
         return MovieSerializer
 
 
-class MovieSessionViewSet(viewsets.ModelViewSet):
+class MovieSessionListCreateView(DefaultAuthMixin, generics.ListCreateAPIView):
     queryset = (
         MovieSession.objects.all()
         .select_related("movie", "cinema_hall")
@@ -92,7 +106,7 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
         date = self.request.query_params.get("date")
         movie_id_str = self.request.query_params.get("movie")
 
-        queryset = self.queryset
+        queryset = super().get_queryset()
 
         if date:
             date = datetime.strptime(date, "%Y-%m-%d").date()
@@ -104,10 +118,28 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
         return queryset
 
     def get_serializer_class(self):
-        if self.action == "list":
+        if self.request.method.lower() == "get":
             return MovieSessionListSerializer
 
-        if self.action == "retrieve":
+        return MovieSessionSerializer
+
+
+class MovieSessionRetrieveUpdateDestroyView(
+    DefaultAuthMixin, generics.RetrieveUpdateDestroyAPIView
+):
+    queryset = (
+        MovieSession.objects.all()
+        .select_related("movie", "cinema_hall")
+        .annotate(
+            tickets_available=F("cinema_hall__rows")
+            * F("cinema_hall__seats_in_row")
+            - Count("tickets")
+        )
+    )
+    serializer_class = MovieSessionSerializer
+
+    def get_serializer_class(self):
+        if self.request.method.lower() == "get":
             return MovieSessionDetailSerializer
 
         return MovieSessionSerializer
@@ -118,18 +150,20 @@ class OrderPagination(PageNumberPagination):
     max_page_size = 100
 
 
-class OrderViewSet(viewsets.ModelViewSet):
+class OrderListCreateView(generics.ListCreateAPIView):
     queryset = Order.objects.prefetch_related(
         "tickets__movie_session__movie", "tickets__movie_session__cinema_hall"
     )
     serializer_class = OrderSerializer
     pagination_class = OrderPagination
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user)
 
     def get_serializer_class(self):
-        if self.action == "list":
+        if self.request.method.lower() == "get":
             return OrderListSerializer
 
         return OrderSerializer
