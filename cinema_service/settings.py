@@ -114,6 +114,15 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework.authentication.TokenAuthentication",
+    ),
+    "DEFAULT_PERMISSION_CLASSES": (
+        "cinema.permissions.IsAdminOrIfAuthenticatedReadOnly",
+    ),
+}
+
 AUTH_USER_MODEL = "user.User"
 
 # Internationalization
@@ -125,7 +134,7 @@ TIME_ZONE = "UTC"
 
 USE_I18N = True
 
-USE_TZ = False
+USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
