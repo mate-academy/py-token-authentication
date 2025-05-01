@@ -1,1 +1,12 @@
-# write your code here
+from django.contrib import admin
+from django.urls import path, include
+
+from user.views import UserView, CreateTokenView, ManageUserView
+
+urlpatterns = [
+    path("register/", UserView.as_view(), name="create"),
+    path("login/", CreateTokenView.as_view(), name="login"),
+    path("me/", ManageUserView.as_view(), name="manage"),
+]
+
+app_name = "user"

@@ -17,7 +17,6 @@ def sample_actor(**params):
         "last_name": "test_last",
     }
     defaults.update(params)
-
     return Actor.objects.create(**defaults)
 
 
