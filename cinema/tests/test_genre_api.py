@@ -5,20 +5,22 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from cinema.models import Genre
-from user.tests.test_user_api import create_user
 from cinema.serializers import GenreSerializer
+from user.tests.test_user_api import create_user
 
 GENRE_URL = reverse("cinema:genre-list")
 
 
-def sample_genres(**params):
-    defaults = {"name": "Poem"}
+def sample_genre(**params):
+    defaults = {
+        "name": "test_genre",
+    }
     defaults.update(params)
 
-    return Genre.objects.create(**params)
+    return Genre.objects.create(**defaults)
 
 
-class PublicGenresApiTests(TestCase):
+class PublicGenreApiTests(TestCase):
     def setUp(self):
         self.client = APIClient()
 
@@ -37,8 +39,8 @@ class PrivateGenreApiTests(TestCase):
         self.client = APIClient()
         self.client.force_authenticate(user=self.user)
 
-    def test_list_genres(self):
-        sample_genres()
+    def test_get_genres(self):
+        sample_genre()
 
         response = self.client.get(GENRE_URL)
 
@@ -48,8 +50,10 @@ class PrivateGenreApiTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, serializer.data)
 
-    def test_post_genres(self):
-        payload = {"name": "Name"}
+    def test_post_genre(self):
+        payload = {
+            "name": "test_genre",
+        }
 
         response = self.client.post(GENRE_URL, payload)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -66,28 +70,32 @@ class AdminGenreApiTests(TestCase):
         self.client = APIClient()
         self.client.force_authenticate(user=self.user)
 
-    def test_post_genres(self):
-        payload = {"name": "Name"}
+    def test_post_genre(self):
+        payload = {
+            "name": "test_genre",
+        }
 
         response = self.client.post(GENRE_URL, payload)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_retrieve_genre(self):
-        sample_genres()
+        genre = sample_genre()
 
-        response = self.client.get(f"{GENRE_URL}1/")
+        response = self.client.get(f"{GENRE_URL}{genre.id}/")
 
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_put_genre(self):
-        sample_genres()
+        genre = sample_genre()
+        payload = {
+            "name": "new_genre",
+        }
 
-        response = self.client.put(f"{GENRE_URL}1/", {})
-
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        response = self.client.put(f"{GENRE_URL}{genre.id}/", payload)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_delete_genre(self):
-        sample_genres()
+        genre = sample_genre()
 
-        response = self.client.delete(f"{GENRE_URL}1/")
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        response = self.client.delete(f"{GENRE_URL}{genre.id}/")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)

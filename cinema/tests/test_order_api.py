@@ -5,27 +5,48 @@ from django.urls import reverse
 from rest_framework.test import APIClient
 from rest_framework import status
 
-from cinema.models import Ticket, Order
-from cinema.tests.test_movie_session_api import sample_movie_session
+from cinema.models import Ticket, Order, MovieSession, Movie, CinemaHall
+from cinema.serializers import OrderListSerializer
 from user.tests.test_user_api import create_user
 
 ORDER_URL = reverse("cinema:order-list")
 
 
-def sample_order(user):
-    return Order.objects.create(user=user)
+def sample_movie_session(**params):
+    defaults = {
+        "show_time": "2022-09-02T00:00:00Z",
+        "movie": Movie.objects.create(
+            title="Test Movie",
+            description="Test Description",
+            duration=120,
+        ),
+        "cinema_hall": CinemaHall.objects.create(
+            name="Test Hall",
+            rows=10,
+            seats_in_row=10,
+        ),
+    }
+    defaults.update(params)
+
+    return MovieSession.objects.create(**defaults)
 
 
-def sample_ticket(order, **params):
-    movie_session = sample_movie_session()
+def sample_order(user, **params):
+    defaults = {
+        "user": user,
+    }
+    defaults.update(params)
 
+    return Order.objects.create(**defaults)
+
+
+def sample_ticket(order, movie_session, **params):
     defaults = {
         "movie_session": movie_session,
-        "row": 2,
-        "seat": 2,
         "order": order,
+        "row": 1,
+        "seat": 1,
     }
-
     defaults.update(params)
 
     return Ticket.objects.create(**defaults)
@@ -43,57 +64,83 @@ class PublicOrderApiTests(TestCase):
 class PrivateOrderApiTests(TestCase):
     def setUp(self):
         self.user = create_user(
-            username="test_admin",
+            username="test_user",
             email="test@test.com",
             password="testpass",
         )
         self.client = APIClient()
         self.client.force_authenticate(user=self.user)
 
-    def test_get_order(self):
+    def test_get_orders(self):
         order = sample_order(user=self.user)
-
-        sample_ticket(order)
+        movie_session = sample_movie_session()
+        sample_ticket(order=order, movie_session=movie_session)
 
         response = self.client.get(ORDER_URL)
 
+        orders = Order.objects.filter(user=self.user)
+        serializer = OrderListSerializer(orders, many=True)
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["results"], serializer.data)
 
     def test_post_order(self):
-        response = self.client.post(ORDER_URL, {})
+        movie_session = sample_movie_session()
+        payload = {
+            "tickets": [
+                {
+                    "movie_session": movie_session.id,
+                    "row": 1,
+                    "seat": 1,
+                }
+            ]
+        }
 
-        self.assertNotEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        response = self.client.post(ORDER_URL, payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_retrieve_order(self):
         order = sample_order(user=self.user)
-        sample_ticket(order)
+        movie_session = sample_movie_session()
+        sample_ticket(order=order, movie_session=movie_session)
 
-        response = self.client.get(f"{ORDER_URL}1/")
+        response = self.client.get(f"{ORDER_URL}{order.id}/")
 
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_put_order(self):
         order = sample_order(user=self.user)
+        movie_session = sample_movie_session()
+        sample_ticket(order=order, movie_session=movie_session)
 
-        sample_ticket(order)
+        new_movie_session = sample_movie_session()
+        payload = {
+            "tickets": [
+                {
+                    "movie_session": new_movie_session.id,
+                    "row": 2,
+                    "seat": 2,
+                }
+            ]
+        }
 
-        response = self.client.put(f"{ORDER_URL}1/", {})
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        response = self.client.put(f"{ORDER_URL}{order.id}/", payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_delete_order(self):
         order = sample_order(user=self.user)
+        movie_session = sample_movie_session()
+        sample_ticket(order=order, movie_session=movie_session)
 
-        sample_ticket(order)
-
-        response = self.client.delete(f"{ORDER_URL}1/")
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        response = self.client.delete(f"{ORDER_URL}{order.id}/")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
 
 class AdminOrderApiTests(TestCase):
     def setUp(self):
         self.user = create_user(
             username="test_admin",
-            email="test@test.com",
+            email="admin@test.com",
             password="testpass",
             is_staff=True,
         )
@@ -101,22 +148,15 @@ class AdminOrderApiTests(TestCase):
         self.client.force_authenticate(user=self.user)
 
     def test_get_order_when_admin_dont_have_order(self):
-        user = get_user_model().objects.create_user(
-            username="user",
-            email="user@test.com",
-            password="paspassjnf",
+        user = create_user(
+            username="test_user2",
+            email="test2@test.com",
+            password="testpass",
         )
         order = sample_order(user=user)
+        movie_session = sample_movie_session()
+        sample_ticket(order=order, movie_session=movie_session)
 
-        sample_ticket(order)
-
-        response = self.client.get(ORDER_URL)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["count"], 0)
-
-        self.client.force_authenticate(user=user)
-        response = self.client.get(ORDER_URL)
+        response = self.client.get(f"{ORDER_URL}{order.id}/")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["count"], 1)

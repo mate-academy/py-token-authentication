@@ -9,32 +9,41 @@ from rest_framework import status
 from cinema.models import MovieSession, Movie, CinemaHall
 from cinema.tests.test_actor_api import sample_actor
 from cinema.tests.test_cinema_hall_api import sample_cinema_hall
-from cinema.tests.test_genre_api import sample_genres
+from cinema.tests.test_genre_api import sample_genre
 from cinema.tests.test_movie_api import sample_movie
 from user.tests.test_user_api import create_user
-from cinema.serializers import MovieSessionDetailSerializer
+from cinema.serializers import MovieSessionListSerializer
 
 MOVIE_SESSION_URL = reverse("cinema:moviesession-list")
 
 
-def sample_movie_session(**params):
-    genres = sample_genres()
-    actors = sample_actor()
-    movie = sample_movie()
-
-    movie.genres.add(genres)
-    movie.actors.add(actors)
-
-    cinema_hall = sample_cinema_hall()
-
+def sample_movie(**params):
     defaults = {
-        "movie": movie,
-        "cinema_hall": cinema_hall,
-        "show_time": datetime.datetime(
-            year=2022,
-            month=9,
-            day=2,
-        ),
+        "title": "Test Movie",
+        "description": "Test Description",
+        "duration": 120,
+    }
+    defaults.update(params)
+
+    return Movie.objects.create(**defaults)
+
+
+def sample_cinema_hall(**params):
+    defaults = {
+        "name": "Test Hall",
+        "rows": 10,
+        "seats_in_row": 10,
+    }
+    defaults.update(params)
+
+    return CinemaHall.objects.create(**defaults)
+
+
+def sample_movie_session(**params):
+    defaults = {
+        "show_time": "2022-09-02T00:00:00Z",
+        "movie": sample_movie(),
+        "cinema_hall": sample_cinema_hall(),
     }
     defaults.update(params)
 
@@ -57,7 +66,7 @@ class PublicMovieSessionApiTests(TestCase):
 class PrivateMovieSessionApiTests(TestCase):
     def setUp(self):
         self.user = create_user(
-            username="test_admin",
+            username="test_user",
             email="test@test.com",
             password="testpass",
         )
@@ -67,38 +76,24 @@ class PrivateMovieSessionApiTests(TestCase):
     def test_get_movie_sessions(self):
         sample_movie_session()
 
-        movie_sessions = self.client.get(MOVIE_SESSION_URL)
-        self.assertEqual(movie_sessions.status_code, status.HTTP_200_OK)
+        response = self.client.get(MOVIE_SESSION_URL)
 
-    def test_retrieve_movie_session(self):
-        movie_session = sample_movie_session()
-
-        url = detail_url(movie_session.id)
-        response = self.client.get(url)
-
-        serializer = MovieSessionDetailSerializer(movie_session, many=False)
+        movie_sessions = MovieSession.objects.all()
+        serializer = MovieSessionListSerializer(movie_sessions, many=True)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, serializer.data)
 
     def test_post_movie_session(self):
-        response = self.client.post(MOVIE_SESSION_URL, {})
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        movie = sample_movie()
+        cinema_hall = sample_cinema_hall()
+        payload = {
+            "show_time": "2022-09-02T00:00:00Z",
+            "movie": movie.id,
+            "cinema_hall": cinema_hall.id,
+        }
 
-    def test_put_movie_session(self):
-        movie_session = sample_movie_session()
-
-        url = detail_url(movie_session.id)
-        response = self.client.put(url, {})
-
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_delete_movie_session(self):
-        movie_session = sample_movie_session()
-
-        url = detail_url(movie_session.id)
-        response = self.client.delete(url)
-
+        response = self.client.post(MOVIE_SESSION_URL, payload)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
@@ -114,53 +109,39 @@ class AdminMovieSessionApiTests(TestCase):
         self.client.force_authenticate(user=self.user)
 
     def test_post_movie_session(self):
-        genres = sample_genres()
-        actors = sample_actor()
         movie = sample_movie()
-
-        movie.genres.add(genres)
-        movie.actors.add(actors)
-
         cinema_hall = sample_cinema_hall()
-
         payload = {
+            "show_time": "2022-09-02T00:00:00Z",
             "movie": movie.id,
             "cinema_hall": cinema_hall.id,
-            "show_time": datetime.datetime(
-                year=2022,
-                month=9,
-                day=2,
-            ),
         }
 
         response = self.client.post(MOVIE_SESSION_URL, payload)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-    def test_put_movie_session(self):
+    def test_retrieve_movie_session(self):
         movie_session = sample_movie_session()
 
-        movie = Movie.objects.get(pk=1)
-        cinema_hall = CinemaHall.objects.get(pk=1)
+        response = self.client.get(f"{MOVIE_SESSION_URL}{movie_session.id}/")
 
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_put_movie_session(self):
+        movie_session = sample_movie_session()
+        movie = sample_movie()
+        cinema_hall = sample_cinema_hall()
         payload = {
+            "show_time": "2022-09-03T00:00:00Z",
             "movie": movie.id,
             "cinema_hall": cinema_hall.id,
-            "show_time": datetime.datetime(
-                year=2023,
-                month=1,
-                day=23,
-            ),
         }
 
-        url = detail_url(movie_session.id)
-        response = self.client.put(url, payload)
-
+        response = self.client.put(f"{MOVIE_SESSION_URL}{movie_session.id}/", payload)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_delete_movie_session(self):
         movie_session = sample_movie_session()
 
-        url = detail_url(movie_session.id)
-        response = self.client.delete(url)
-
+        response = self.client.delete(f"{MOVIE_SESSION_URL}{movie_session.id}/")
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)

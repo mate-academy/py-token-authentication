@@ -6,5 +6,7 @@
 venv/
 .pytest_cache/
 **__pycache__/
-*.pyc
+*.py[cod]
+*$py.class
 **db.sqlite3
+.venv

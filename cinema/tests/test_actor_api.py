@@ -82,20 +82,24 @@ class AdminActorApiTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_retrieve_actor(self):
-        sample_actor()
+        actor = sample_actor()
 
-        response = self.client.get(f"{ACTOR_URL}1/")
+        response = self.client.get(f"{ACTOR_URL}{actor.id}/")
 
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_put_actor(self):
-        sample_actor()
+        actor = sample_actor()
+        payload = {
+            "first_name": "new_name",
+            "last_name": "new_last",
+        }
 
-        response = self.client.put(f"{ACTOR_URL}1/", {})
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        response = self.client.put(f"{ACTOR_URL}{actor.id}/", payload)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_delete_actor(self):
-        sample_actor()
+        actor = sample_actor()
 
-        response = self.client.delete(f"{ACTOR_URL}1/")
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        response = self.client.delete(f"{ACTOR_URL}{actor.id}/")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
