@@ -5,8 +5,8 @@ from rest_framework import serializers
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
-        fields = ('id', 'username', 'password', "email", "is_staff")
-        read_only_fields = ('id', "is_staff")
+        fields = ("id", "username", "password", "email", "is_staff")
+        read_only_fields = ("id", "is_staff")
         extra_kwargs = {
             "password": {
                 "write_only": True,
@@ -20,7 +20,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         """Update the user data with encrypting password"""
-        password = validated_data.pop('password', None)
+        password = validated_data.pop("password", None)
         user = super().update(instance, validated_data)
 
         if password:
