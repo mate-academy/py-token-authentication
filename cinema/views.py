@@ -2,8 +2,8 @@ from datetime import datetime
 
 from django.db.models import F, Count
 from rest_framework import viewsets
-from rest_framework.pagination import PageNumberPagination
 
+from cinema.viewsets import ListAndCreateViewSet, ListCreateAndRetrieveViewSet
 from cinema.models import Genre, Actor, CinemaHall, Movie, MovieSession, Order
 
 from cinema.serializers import (
@@ -16,29 +16,32 @@ from cinema.serializers import (
     MovieDetailSerializer,
     MovieSessionDetailSerializer,
     MovieListSerializer,
-    OrderSerializer,
-    OrderListSerializer,
 )
+from user.permissions import IsAdminOrIfAuthenticatedReadOnly
 
 
-class GenreViewSet(viewsets.ModelViewSet):
+class GenreViewSet(ListAndCreateViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
 
-class ActorViewSet(viewsets.ModelViewSet):
+class ActorViewSet(ListAndCreateViewSet):
     queryset = Actor.objects.all()
     serializer_class = ActorSerializer
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
 
-class CinemaHallViewSet(viewsets.ModelViewSet):
+class CinemaHallViewSet(ListAndCreateViewSet):
     queryset = CinemaHall.objects.all()
     serializer_class = CinemaHallSerializer
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
 
-class MovieViewSet(viewsets.ModelViewSet):
+class MovieViewSet(ListCreateAndRetrieveViewSet):
     queryset = Movie.objects.prefetch_related("genres", "actors")
     serializer_class = MovieSerializer
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
     @staticmethod
     def _params_to_ints(qs):
@@ -87,6 +90,7 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
         )
     )
     serializer_class = MovieSessionSerializer
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
     def get_queryset(self):
         date = self.request.query_params.get("date")
@@ -111,28 +115,3 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
             return MovieSessionDetailSerializer
 
         return MovieSessionSerializer
-
-
-class OrderPagination(PageNumberPagination):
-    page_size = 10
-    max_page_size = 100
-
-
-class OrderViewSet(viewsets.ModelViewSet):
-    queryset = Order.objects.prefetch_related(
-        "tickets__movie_session__movie", "tickets__movie_session__cinema_hall"
-    )
-    serializer_class = OrderSerializer
-    pagination_class = OrderPagination
-
-    def get_queryset(self):
-        return Order.objects.filter(user=self.request.user)
-
-    def get_serializer_class(self):
-        if self.action == "list":
-            return OrderListSerializer
-
-        return OrderSerializer
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
