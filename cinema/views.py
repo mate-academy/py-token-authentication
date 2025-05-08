@@ -2,9 +2,16 @@ from datetime import datetime
 
 from django.db.models import F, Count
 from rest_framework import viewsets
+from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 
 from cinema.models import Genre, Actor, CinemaHall, Movie, MovieSession, Order
+
+from cinema.permissions import (
+    ReadAndCreate,
+    NoPermission,
+    IsAdminOrIfAuthenticatedReadOnly,
+)
 
 from cinema.serializers import (
     GenreSerializer,
@@ -25,15 +32,48 @@ class GenreViewSet(viewsets.ModelViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
 
+    def get_permissions(self):
+        if self.action in ["create", "list"]:
+            permission_classes = [
+                ReadAndCreate,
+            ]
+        else:
+            permission_classes = [
+                NoPermission,
+            ]
+        return [permission() for permission in permission_classes]
+
 
 class ActorViewSet(viewsets.ModelViewSet):
     queryset = Actor.objects.all()
     serializer_class = ActorSerializer
 
+    def get_permissions(self):
+        if self.action in ["create", "list"]:
+            permission_classes = [
+                ReadAndCreate,
+            ]
+        else:
+            permission_classes = [
+                NoPermission,
+            ]
+        return [permission() for permission in permission_classes]
+
 
 class CinemaHallViewSet(viewsets.ModelViewSet):
     queryset = CinemaHall.objects.all()
     serializer_class = CinemaHallSerializer
+
+    def get_permissions(self):
+        if self.action in ["create", "list"]:
+            permission_classes = [
+                ReadAndCreate,
+            ]
+        else:
+            permission_classes = [
+                NoPermission,
+            ]
+        return [permission() for permission in permission_classes]
 
 
 class MovieViewSet(viewsets.ModelViewSet):
@@ -65,6 +105,17 @@ class MovieViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(actors__id__in=actors_ids)
 
         return queryset.distinct()
+
+    def get_permissions(self):
+        if self.action in ["create", "list", "retrieve"]:
+            permission_classes = [
+                ReadAndCreate,
+            ]
+        else:
+            permission_classes = [
+                NoPermission,
+            ]
+        return [permission() for permission in permission_classes]
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -112,6 +163,24 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
 
         return MovieSessionSerializer
 
+    def get_permissions(self):
+        if self.action in [
+            "create",
+            "list",
+            "retrieve",
+            "update",
+            "partial_update",
+            "destroy",
+        ]:
+            permission_classes = [
+                ReadAndCreate,
+            ]
+        else:
+            permission_classes = [
+                NoPermission,
+            ]
+        return [permission() for permission in permission_classes]
+
 
 class OrderPagination(PageNumberPagination):
     page_size = 10
@@ -136,3 +205,18 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+    def get_permissions(self):
+        if self.action in [
+            "create",
+            "list",
+            "retrieve"
+        ]:
+            permission_classes = [
+                ReadAndCreate,
+            ]
+        else:
+            permission_classes = [
+                NoPermission,
+            ]
+        return [permission() for permission in permission_classes]
