@@ -1,11 +1,14 @@
 from datetime import datetime
-
 from django.db.models import F, Count
 from rest_framework import viewsets
+from rest_framework.mixins import (
+    ListModelMixin,
+    CreateModelMixin,
+    RetrieveModelMixin
+)
 from rest_framework.pagination import PageNumberPagination
-
+from rest_framework.permissions import IsAuthenticated
 from cinema.models import Genre, Actor, CinemaHall, Movie, MovieSession, Order
-
 from cinema.serializers import (
     GenreSerializer,
     ActorSerializer,
@@ -21,22 +24,30 @@ from cinema.serializers import (
 )
 
 
-class GenreViewSet(viewsets.ModelViewSet):
+class ListCreateViewSet(
+    viewsets.GenericViewSet,
+    ListModelMixin,
+    CreateModelMixin
+):
+    pass
+
+
+class GenreViewSet(ListCreateViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
 
 
-class ActorViewSet(viewsets.ModelViewSet):
+class ActorViewSet(ListCreateViewSet):
     queryset = Actor.objects.all()
     serializer_class = ActorSerializer
 
 
-class CinemaHallViewSet(viewsets.ModelViewSet):
+class CinemaHallViewSet(ListCreateViewSet):
     queryset = CinemaHall.objects.all()
     serializer_class = CinemaHallSerializer
 
 
-class MovieViewSet(viewsets.ModelViewSet):
+class MovieViewSet(ListCreateViewSet, RetrieveModelMixin):
     queryset = Movie.objects.prefetch_related("genres", "actors")
     serializer_class = MovieSerializer
 
@@ -118,20 +129,24 @@ class OrderPagination(PageNumberPagination):
     max_page_size = 100
 
 
-class OrderViewSet(viewsets.ModelViewSet):
-    queryset = Order.objects.prefetch_related(
-        "tickets__movie_session__movie", "tickets__movie_session__cinema_hall"
-    )
+class OrderViewSet(ListCreateViewSet):
     serializer_class = OrderSerializer
     pagination_class = OrderPagination
 
+    def get_permissions(self):
+        if self.action == "create":
+            return [IsAuthenticated()]
+        return super().get_permissions()
+
     def get_queryset(self):
-        return Order.objects.filter(user=self.request.user)
+        return Order.objects.filter(user=self.request.user).prefetch_related(
+            "tickets__movie_session__movie",
+            "tickets__movie_session__cinema_hall"
+        )
 
     def get_serializer_class(self):
         if self.action == "list":
             return OrderListSerializer
-
         return OrderSerializer
 
     def perform_create(self, serializer):
