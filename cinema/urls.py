@@ -12,15 +12,31 @@ from cinema.views import (
 )
 
 urlpatterns = [
-    path("genres/", GenreListCreateView.as_view(), name="genre-list"),
-    path("actors/", ActorListCreateView.as_view(), name="actor-list"),
+    path(
+        "genres/",
+        GenreListCreateView.as_view(),
+        name="genre-list"
+    ),
+    path(
+        "actors/",
+        ActorListCreateView.as_view(),
+        name="actor-list"
+    ),
     path(
         "cinema_halls/",
         CinemaHallListCreateView.as_view(),
         name="cinemahall-list"
     ),
-    path("movies/", MovieListCreateView.as_view(), name="movie-list"),
-    path("movies/<int:pk>/", MovieRetrieveView.as_view(), name="movie-detail"),
+    path(
+        "movies/",
+        MovieListCreateView.as_view(),
+        name="movie-list"
+    ),
+    path(
+        "movies/<int:pk>/",
+        MovieRetrieveView.as_view(),
+        name="movie-detail"
+    ),
     path(
         "movie_sessions/",
         MovieSessionListCreateView.as_view(),
@@ -31,7 +47,11 @@ urlpatterns = [
         MovieSessionRetrieveUpdateDestroyView.as_view(),
         name="moviesession-detail"
     ),
-    path("orders/", OrderListCreateView.as_view(), name="order-list"),
+    path(
+        "orders/",
+        OrderListCreateView.as_view(),
+        name="order-list"
+    ),
 ]
 
 app_name = "cinema"
