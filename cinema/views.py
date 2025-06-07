@@ -1,8 +1,11 @@
 from datetime import datetime
-
-from django.db.models import F, Count
-from rest_framework import viewsets
+from rest_framework.exceptions import NotAuthenticated
 from rest_framework.pagination import PageNumberPagination
+from django.db.models import F, Count
+from rest_framework import viewsets, mixins
+from rest_framework.authentication import TokenAuthentication
+from cinema.permissions import IsAdminOrIfAuthenticatedReadOnly
+from rest_framework.permissions import IsAuthenticated
 
 from cinema.models import Genre, Actor, CinemaHall, Movie, MovieSession, Order
 
@@ -16,29 +19,45 @@ from cinema.serializers import (
     MovieDetailSerializer,
     MovieSessionDetailSerializer,
     MovieListSerializer,
-    OrderSerializer,
-    OrderListSerializer,
+    OrderSerializer, OrderListSerializer
 )
 
 
-class GenreViewSet(viewsets.ModelViewSet):
+class GenreViewSet(mixins.ListModelMixin,
+                   mixins.CreateModelMixin,
+                   viewsets.GenericViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
 
-class ActorViewSet(viewsets.ModelViewSet):
+class ActorViewSet(mixins.ListModelMixin,
+                   mixins.CreateModelMixin,
+                   viewsets.GenericViewSet):
     queryset = Actor.objects.all()
     serializer_class = ActorSerializer
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
 
-class CinemaHallViewSet(viewsets.ModelViewSet):
+class CinemaHallViewSet(mixins.ListModelMixin,
+                        mixins.CreateModelMixin,
+                        viewsets.GenericViewSet):
     queryset = CinemaHall.objects.all()
     serializer_class = CinemaHallSerializer
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
 
-class MovieViewSet(viewsets.ModelViewSet):
+class MovieViewSet(mixins.ListModelMixin,
+                   mixins.CreateModelMixin,
+                   viewsets.GenericViewSet,
+                   mixins.RetrieveModelMixin):
     queryset = Movie.objects.prefetch_related("genres", "actors")
     serializer_class = MovieSerializer
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
     @staticmethod
     def _params_to_ints(qs):
@@ -64,6 +83,9 @@ class MovieViewSet(viewsets.ModelViewSet):
             actors_ids = self._params_to_ints(actors)
             queryset = queryset.filter(actors__id__in=actors_ids)
 
+        if self.action in ("list", "retrieve"):
+            queryset = queryset.prefetch_related("actors", "genres")
+
         return queryset.distinct()
 
     def get_serializer_class(self):
@@ -87,21 +109,45 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
         )
     )
     serializer_class = MovieSessionSerializer
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
     def get_queryset(self):
-        date = self.request.query_params.get("date")
-        movie_id_str = self.request.query_params.get("movie")
+        queryset = MovieSession.objects.all()
 
-        queryset = self.queryset
+        movie = self.request.query_params.get("movie")
+        date_str = self.request.query_params.get("date")
 
-        if date:
-            date = datetime.strptime(date, "%Y-%m-%d").date()
-            queryset = queryset.filter(show_time__date=date)
+        if movie:
+            try:
+                queryset = queryset.filter(movie__id=int(movie))
+            except ValueError:
+                pass
 
-        if movie_id_str:
-            queryset = queryset.filter(movie_id=int(movie_id_str))
+        if date_str:
+            try:
+                date = datetime.strptime(date_str, "%Y-%m-%d").date()
+                queryset = queryset.filter(show_time__date=date)
+            except ValueError:
+                pass
 
-        return queryset
+        if self.action == "list":
+            queryset = (
+                queryset
+                .select_related("movie", "cinema_hall")
+                .annotate(tickets_available=F("cinema_hall__seats_in_row")
+                                            * F("cinema_hall__rows")
+                                            - Count("tickets"))
+                .order_by("id")
+            )
+            return queryset
+
+        if self.action == "retrieve":
+            queryset = queryset.select_related("movie", "cinema_hall")
+            return queryset
+
+        return queryset.distinct()
+
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -118,15 +164,30 @@ class OrderPagination(PageNumberPagination):
     max_page_size = 100
 
 
-class OrderViewSet(viewsets.ModelViewSet):
+class OrderViewSet(mixins.ListModelMixin,
+                   mixins.CreateModelMixin,
+                   viewsets.GenericViewSet):
     queryset = Order.objects.prefetch_related(
         "tickets__movie_session__movie", "tickets__movie_session__cinema_hall"
     )
     serializer_class = OrderSerializer
     pagination_class = OrderPagination
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        return Order.objects.filter(user=self.request.user)
+        # return Order.objects.filter(user=self.request.user)
+        user = self.request.user
+        if not user.is_authenticated:
+            raise NotAuthenticated("Authentication required")
+        queryset = self.queryset.filter(user=self.request.user)
+
+        if self.action == "list":
+            queryset = queryset.select_related("user")
+            queryset = queryset.prefetch_related(
+                "tickets__movie_session__movie",
+                "tickets__movie_session__cinema_hall")
+        return queryset
 
     def get_serializer_class(self):
         if self.action == "list":
