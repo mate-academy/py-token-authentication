@@ -1,10 +1,13 @@
 from datetime import datetime
-
+from django.http import Http404
 from django.db.models import F, Count
 from rest_framework import viewsets
 from rest_framework.pagination import PageNumberPagination
-
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
 from cinema.models import Genre, Actor, CinemaHall, Movie, MovieSession, Order
+from cinema.permissions import IsAdminOrIfAuthenticatedReadOnly
 
 from cinema.serializers import (
     GenreSerializer,
@@ -24,29 +27,76 @@ from cinema.serializers import (
 class GenreViewSet(viewsets.ModelViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
+
+    def retrieve(self, request, *args, **kwargs):
+        raise Http404
+
+    def update(self, request, *args, **kwargs):
+        raise Http404
+
+    def partial_update(self, request, *args, **kwargs):
+        raise Http404
+
+    def destroy(self, request, *args, **kwargs):
+        raise Http404
 
 
 class ActorViewSet(viewsets.ModelViewSet):
     queryset = Actor.objects.all()
     serializer_class = ActorSerializer
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
+
+    def retrieve(self, request, *args, **kwargs):
+        raise Http404
+
+    def update(self, request, *args, **kwargs):
+        raise Http404
+
+    def partial_update(self, request, *args, **kwargs):
+        raise Http404
+
+    def destroy(self, request, *args, **kwargs):
+        raise Http404
 
 
 class CinemaHallViewSet(viewsets.ModelViewSet):
     queryset = CinemaHall.objects.all()
     serializer_class = CinemaHallSerializer
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
+
+    def retrieve(self, request, *args, **kwargs):
+        raise Http404
+
+    def update(self, request, *args, **kwargs):
+        raise Http404
+
+    def partial_update(self, request, *args, **kwargs):
+        raise Http404
+
+    def destroy(self, request, *args, **kwargs):
+        raise Http404
 
 
 class MovieViewSet(viewsets.ModelViewSet):
     queryset = Movie.objects.prefetch_related("genres", "actors")
     serializer_class = MovieSerializer
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
+
+    def update(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def partial_update(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def destroy(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
     @staticmethod
     def _params_to_ints(qs):
-        """Converts a list of string IDs to a list of integers"""
         return [int(str_id) for str_id in qs.split(",")]
 
     def get_queryset(self):
-        """Retrieve the movies with filters"""
         title = self.request.query_params.get("title")
         genres = self.request.query_params.get("genres")
         actors = self.request.query_params.get("actors")
@@ -87,6 +137,7 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
         )
     )
     serializer_class = MovieSessionSerializer
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
     def get_queryset(self):
         date = self.request.query_params.get("date")
@@ -124,6 +175,19 @@ class OrderViewSet(viewsets.ModelViewSet):
     )
     serializer_class = OrderSerializer
     pagination_class = OrderPagination
+    permission_classes = (IsAuthenticated,)
+
+    def retrieve(self, request, *args, **kwargs):
+        raise Http404
+
+    def update(self, request, *args, **kwargs):
+        raise Http404
+
+    def partial_update(self, request, *args, **kwargs):
+        raise Http404
+
+    def destroy(self, request, *args, **kwargs):
+        raise Http404
 
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user)
