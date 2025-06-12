@@ -9,7 +9,11 @@ from cinema.models import (
     MovieSession,
     Ticket,
     Order,
+    User,
 )
+
+from django.contrib.auth.password_validation import validate_password
+from rest_framework.validators import UniqueValidator
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -135,3 +139,36 @@ class OrderSerializer(serializers.ModelSerializer):
 
 class OrderListSerializer(OrderSerializer):
     tickets = TicketListSerializer(many=True, read_only=True)
+
+
+class RegisterSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(
+        required=True,
+        validators=[UniqueValidator(queryset=User.objects.all())],
+    )
+    password = serializers.CharField(write_only=True, required=True, validators=[validate_password], min_length=5)
+    password2 = serializers.CharField(write_only=True, required=True, min_length=5)
+
+    class Meta:
+        model = User
+        fields = ("username", "password", "password2", "email")
+
+    def validate(self, attrs):
+        if attrs["password"] != attrs["password2"]:
+            raise serializers.ValidationError({"password": "Passwords don't match"})
+        return attrs
+
+    def create(self, validated_data):
+        user = User(
+            username=validated_data["username"],
+            email=validated_data.get("email", "")
+        )
+        user.set_password(validated_data["password"])
+        user.save()
+        return user
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("id", "username", "email", "is_staff")
+        read_only_fields = ("id", "is_staff")

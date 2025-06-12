@@ -9,6 +9,7 @@ from cinema.views import (
     MovieSessionViewSet,
     OrderViewSet,
 )
+from cinema import urls_auth 
 
 router = routers.DefaultRouter()
 router.register("genres", GenreViewSet)
@@ -18,6 +19,9 @@ router.register("movies", MovieViewSet)
 router.register("movie_sessions", MovieSessionViewSet)
 router.register("orders", OrderViewSet)
 
-urlpatterns = [path("", include(router.urls))]
+urlpatterns = [
+    path("", include(router.urls)),
+    path("", include(urls_auth)),
+]
 
 app_name = "cinema"
