@@ -1,81 +1,60 @@
-from datetime import datetime
-
-from django.db.models import F, Count
-from rest_framework import viewsets, status
-from rest_framework.pagination import PageNumberPagination
+from rest_framework import viewsets, mixins
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
+from rest_framework.pagination import PageNumberPagination
+from django.db.models import F, Count
+from datetime import datetime
 
 from cinema.models import (Genre,
                            Actor,
                            CinemaHall,
-                           Movie,
-                           MovieSession,
-                           Order)
-from cinema.permissions import (IsAdminOrIfAuthenticatedReadOnly,
-                                IsAdminOrReadOnlyStrict,
-                                IsAdminForPostOnly)
+                           Movie, MovieSession, Order)
+from cinema.permissions import IsAdminOrAuthenticatedReadOnly
 from cinema.serializers import (
     GenreSerializer,
     ActorSerializer,
     CinemaHallSerializer,
     MovieSerializer,
+    MovieListSerializer,
+    MovieDetailSerializer,
     MovieSessionSerializer,
     MovieSessionListSerializer,
-    MovieDetailSerializer,
     MovieSessionDetailSerializer,
-    MovieListSerializer,
     OrderSerializer,
     OrderListSerializer,
 )
 
 
-class ReadCreateOnlyViewSet(viewsets.ModelViewSet):
-
-    def update(self, request, *args, **kwargs):
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-    def partial_update(self, request, *args, **kwargs):
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-    def destroy(self, request, *args, **kwargs):
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-    def retrieve(self, request, *args, **kwargs):
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-
-class GenreViewSet(ReadCreateOnlyViewSet):
+class GenreViewSet(mixins.ListModelMixin,
+                   mixins.CreateModelMixin,
+                   viewsets.GenericViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
+    permission_classes = (IsAdminOrAuthenticatedReadOnly,)
 
 
-class ActorViewSet(ReadCreateOnlyViewSet):
+class ActorViewSet(mixins.ListModelMixin,
+                   mixins.CreateModelMixin,
+                   viewsets.GenericViewSet):
     queryset = Actor.objects.all()
     serializer_class = ActorSerializer
-    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
+    permission_classes = (IsAdminOrAuthenticatedReadOnly,)
 
 
-class CinemaHallViewSet(ReadCreateOnlyViewSet):
+class CinemaHallViewSet(mixins.ListModelMixin,
+                        mixins.CreateModelMixin,
+                        viewsets.GenericViewSet):
     queryset = CinemaHall.objects.all()
     serializer_class = CinemaHallSerializer
-    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
+    permission_classes = (IsAdminOrAuthenticatedReadOnly,)
 
 
-class MovieViewSet(viewsets.ModelViewSet):
+class MovieViewSet(mixins.ListModelMixin,
+                   mixins.CreateModelMixin,
+                   mixins.RetrieveModelMixin,
+                   viewsets.GenericViewSet):
     queryset = Movie.objects.prefetch_related("genres", "actors")
     serializer_class = MovieSerializer
-    permission_classes = (IsAuthenticated, IsAdminForPostOnly)
-
-    def update(self, request, *args, **kwargs):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    def partial_update(self, request, *args, **kwargs):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    def destroy(self, request, *args, **kwargs):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    permission_classes = (IsAdminOrAuthenticatedReadOnly,)
 
     @staticmethod
     def _params_to_ints(qs):
@@ -118,7 +97,7 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
         )
     )
     serializer_class = MovieSessionSerializer
-    permission_classes = (IsAdminOrReadOnlyStrict,)
+    permission_classes = (IsAdminOrAuthenticatedReadOnly,)
 
     def get_queryset(self):
         date = self.request.query_params.get("date")
@@ -148,7 +127,9 @@ class OrderPagination(PageNumberPagination):
     max_page_size = 100
 
 
-class OrderViewSet(ReadCreateOnlyViewSet):
+class OrderViewSet(mixins.ListModelMixin,
+                   mixins.CreateModelMixin,
+                   viewsets.GenericViewSet):
     queryset = Order.objects.prefetch_related(
         "tickets__movie_session__movie", "tickets__movie_session__cinema_hall"
     )
