@@ -91,9 +91,11 @@ class MovieViewSet(viewsets.ModelViewSet):
         if title:
             queryset = queryset.filter(title__icontains=title)
         if genres:
-            queryset = queryset.filter(genres__id__in=self._params_to_ints(genres))
+            queryset = queryset.filter(
+                genres__id__in=self._params_to_ints(genres))
         if actors:
-            queryset = queryset.filter(actors__id__in=self._params_to_ints(actors))
+            queryset = queryset.filter(
+                actors__id__in=self._params_to_ints(actors))
 
         return queryset.distinct()
 
@@ -110,7 +112,9 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
         MovieSession.objects.all()
         .select_related("movie", "cinema_hall")
         .annotate(
-            tickets_available=F("cinema_hall__rows") * F("cinema_hall__seats_in_row")
+            tickets_available=F(
+                "cinema_hall__rows") *
+                              F("cinema_hall__seats_in_row")
             - Count("tickets")
         )
     )
