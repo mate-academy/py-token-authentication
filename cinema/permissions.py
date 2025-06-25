@@ -11,15 +11,3 @@ class IsAdminOrIfAuthenticatedReadOnly(BasePermission):
             )
             or (request.user and request.user.is_staff)
         )
-
-
-class IsAdminOrAuthenticatedAndOnlyListCreate(BasePermission):
-    allowed_actions = ("list", "create")
-
-    def has_permission(self, request, view):
-        # Check if user is authenticated
-        if not request.user or not request.user.is_authenticated:
-            return False
-
-        # Check if the action is allowed
-        return view.action in self.allowed_actions
