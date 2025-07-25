@@ -1,10 +1,18 @@
 [flake8]
-inline-quotes = "
-ignore = E203, E266, W503, N807, N818, F401
-max-line-length = 79
-max-complexity = 18
-select = B,C,E,F,W,T4,B9,Q0,N8,VNE
+max-line-length = 100
 exclude =
-    **migrations
+    **/migrations
     venv
     tests
+ignore =
+    E203
+    E266
+    E402
+    E501
+    W503
+    F403
+    F401
+    Q000
+    Q001
+    Q002
+    Q003
