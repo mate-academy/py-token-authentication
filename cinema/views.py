@@ -55,6 +55,7 @@ class ActorViewSet(
         TokenAuthentication,
     )
 
+
 class CinemaHallViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
@@ -65,7 +66,6 @@ class CinemaHallViewSet(
     authentication_classes = (
         TokenAuthentication,
     )
-
 
 
 class MovieViewSet(
@@ -114,7 +114,6 @@ class MovieViewSet(
             return MovieDetailSerializer
 
         return MovieSerializer
-
 
 
 class MovieSessionViewSet(viewsets.ModelViewSet):
