@@ -9,9 +9,9 @@ class IsAdminOrIfAuthenticatedReadOnly(permissions.BasePermission):
             return True
 
         # Handle viewsets that have a 'basename' attribute.
-        if hasattr(view, "basename"):
-            # For "order" and "reservation" viewsets, allow any authenticated user to create or read.
-            if view.basename in ["order", "reservation"]:
+        if hasattr(view, 'basename'):
+            # For the "order" viewset, allow any authenticated user to create or read.
+            if view.basename == "order":
                 if request.method in permissions.SAFE_METHODS:
                     return request.user and request.user.is_authenticated
                 elif request.method == "POST":
