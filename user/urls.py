@@ -7,8 +7,8 @@ app_name = "user"
 router = routers.DefaultRouter()
 
 urlpatterns = [
-    path('', include(router.urls)),
-    path('login/', LoginUserView.as_view(), name='login'),
-    path("register", CreateUserView.as_view(), name='register'),
-    path("me", ManageUserView.as_view(), name='menage_user'),
+    path("", include(router.urls)),
+    path("login/", LoginUserView.as_view(), name="login"),
+    path("register", CreateUserView.as_view(), name="register"),
+    path("me", ManageUserView.as_view(), name="menage_user"),
 ]

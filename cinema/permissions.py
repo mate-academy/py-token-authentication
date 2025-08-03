@@ -1,5 +1,6 @@
 from rest_framework import permissions
 
+
 class IsAdminOrIfAuthenticatedReadOnly(permissions.BasePermission):
 
     def has_permission(self, request, view):
@@ -8,7 +9,7 @@ class IsAdminOrIfAuthenticatedReadOnly(permissions.BasePermission):
             return True
 
         # Handle viewsets that have a 'basename' attribute.
-        if hasattr(view, 'basename'):
+        if hasattr(view, "basename"):
             # For "order" and "reservation" viewsets, allow any authenticated user to create or read.
             if view.basename in ["order", "reservation"]:
                 if request.method in permissions.SAFE_METHODS:
