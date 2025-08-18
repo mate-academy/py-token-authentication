@@ -7,7 +7,6 @@ from rest_framework.pagination import PageNumberPagination
 from cinema.models import Genre, Actor, CinemaHall, Movie, MovieSession, Order
 from cinema.permissions import (
     IsAdminOrIfAuthenticatedReadOnly,
-    IsAdminORAuthenticatedOrReadOnly
 )
 
 from cinema.serializers import (
@@ -154,7 +153,7 @@ class OrderViewSet(
     )
     serializer_class = OrderSerializer
     pagination_class = OrderPagination
-    permission_classes = [IsAdminORAuthenticatedOrReadOnly]
+    permission_classes = [IsAdminOrIfAuthenticatedReadOnly]
 
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user)
