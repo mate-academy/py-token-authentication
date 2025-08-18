@@ -52,6 +52,7 @@ class MovieViewSet(viewsets.ModelViewSet):
     serializer_class = MovieSerializer
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
+    http_method_names = ["get", "post"]
 
     @staticmethod
     def _params_to_ints(qs):
@@ -102,7 +103,7 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
     serializer_class = MovieSessionSerializer
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
-    http_method_names = ["get", "post", "put", "patch"]
+    http_method_names = ["get", "post", "put", "patch", "delete"]
 
     def get_queryset(self):
         date = self.request.query_params.get("date")
