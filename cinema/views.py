@@ -5,7 +5,10 @@ from rest_framework import viewsets, mixins, permissions
 from rest_framework.pagination import PageNumberPagination
 
 from cinema.models import Genre, Actor, CinemaHall, Movie, MovieSession, Order
-from cinema.permissions import IsAdminOrIfAuthenticatedReadOnly, IsAdminORAuthenticatedOrReadOnly
+from cinema.permissions import (
+    IsAdminOrIfAuthenticatedReadOnly,
+    IsAdminORAuthenticatedOrReadOnly
+)
 
 from cinema.serializers import (
     GenreSerializer,
@@ -104,8 +107,8 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
         .select_related("movie", "cinema_hall")
         .annotate(
             tickets_available=F("cinema_hall__rows")
-            * F("cinema_hall__seats_in_row")
-            - Count("tickets")
+                              * F("cinema_hall__seats_in_row")
+                              - Count("tickets")
         )
     )
     serializer_class = MovieSessionSerializer
