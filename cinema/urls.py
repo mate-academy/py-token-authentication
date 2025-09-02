@@ -1,23 +1,24 @@
-from django.urls import path, include
-from rest_framework import routers
-
-from cinema.views import (
-    GenreViewSet,
-    ActorViewSet,
-    CinemaHallViewSet,
-    MovieViewSet,
-    MovieSessionViewSet,
-    OrderViewSet,
+from rest_framework.routers import DefaultRouter
+from .views import (
+    GenreViewSet, CinemaHallViewSet, ActorViewSet,
+    MovieViewSet, MovieSessionViewSet, OrderViewSet
 )
 
-router = routers.DefaultRouter()
-router.register("genres", GenreViewSet)
-router.register("actors", ActorViewSet)
-router.register("cinema_halls", CinemaHallViewSet)
-router.register("movies", MovieViewSet)
-router.register("movie_sessions", MovieSessionViewSet)
-router.register("orders", OrderViewSet)
-
-urlpatterns = [path("", include(router.urls))]
-
 app_name = "cinema"
+
+router = DefaultRouter()
+router.register("genres", GenreViewSet, basename="genre")
+router.register("cinema_halls", CinemaHallViewSet, basename="cinemahall")
+router.register("actors", ActorViewSet, basename="actor")
+router.register("movies", MovieViewSet, basename="movie")
+
+# було basename="session" (або інше) — треба саме "moviesession"
+router.register(
+    "movie_sessions",
+    MovieSessionViewSet,
+    basename="moviesession",
+)
+
+router.register("orders", OrderViewSet, basename="order")
+
+urlpatterns = router.urls
