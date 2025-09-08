@@ -13,7 +13,7 @@ class UserSerializer(serializers.ModelSerializer):
         return get_user_model().objects.create_user(**validated_data)
 
     def update(self, instance, validated_data):
-        password = validated_data.pop("password")
+        password = validated_data.pop("password", None)
         user = super().update(instance, validated_data)
 
         if password:

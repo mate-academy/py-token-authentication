@@ -162,10 +162,10 @@ class OrderViewSet(ReadCreateOnlyViewSet):
     pagination_class = OrderPagination
 
     def get_permissions(self):
-        if self.action in ["update", "partial_update", "destroy"]:
-            return [AllowAny()]
         if self.action == "create":
             return [IsAuthenticated()]
+        if self.action in ["update", "partial_update", "destroy"]:
+            return []
         return super().get_permissions()
 
     def get_queryset(self):
