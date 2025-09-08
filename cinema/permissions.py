@@ -3,7 +3,12 @@ from rest_framework.authentication import TokenAuthentication
 
 
 class IsAdminOrIfAuthenticatedReadOnly(permissions.BasePermission):
-
+    """
+    Custom permission:
+    - Admins have full access.
+    - Authenticated users have read/write access according to SAFE_METHODS.
+    - Anonymous users are denied except where views explicitly allow AllowAny.
+    """
     def has_permission(self, request, view):
         return bool(
             request.method in permissions.SAFE_METHODS
@@ -13,5 +18,8 @@ class IsAdminOrIfAuthenticatedReadOnly(permissions.BasePermission):
 
 
 class AuthenticationMixin:
+    """
+    Mixin to apply token authentication and the custom permission globally.
+    """
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)

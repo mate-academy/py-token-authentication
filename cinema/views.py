@@ -16,7 +16,6 @@ from cinema.permissions import (
     AuthenticationMixin,
     IsAdminOrIfAuthenticatedReadOnly
 )
-
 from cinema.serializers import (
     GenreSerializer,
     ActorSerializer,
@@ -38,6 +37,13 @@ class GenreViewSet(
     CreateModelMixin,
     viewsets.GenericViewSet
 ):
+    """
+    Genre endpoint.
+    AuthenticationMixin applies TokenAuthentication and
+    IsAdminOrIfAuthenticatedReadOnly permission.
+    Admins can create, authenticated users can read/write
+    according to custom permission logic.
+    """
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
 
@@ -48,6 +54,11 @@ class ActorViewSet(
     CreateModelMixin,
     viewsets.GenericViewSet
 ):
+    """
+    Actor endpoint.
+    AuthenticationMixin ensures token auth
+    and custom permission are applied globally.
+    """
     queryset = Actor.objects.all()
     serializer_class = ActorSerializer
 
@@ -58,6 +69,10 @@ class CinemaHallViewSet(
     CreateModelMixin,
     viewsets.GenericViewSet
 ):
+    """
+    CinemaHall endpoint.
+    Same permission logic as Genre/Actor.
+    """
     queryset = CinemaHall.objects.all()
     serializer_class = CinemaHallSerializer
 
@@ -69,6 +84,10 @@ class MovieViewSet(
     RetrieveModelMixin,
     viewsets.GenericViewSet
 ):
+    """
+    Movie endpoint with filtering support.
+    AuthenticationMixin provides token auth + IsAdminOrIfAuthenticatedReadOnly.
+    """
     queryset = Movie.objects.prefetch_related("genres", "actors")
     serializer_class = MovieSerializer
 
@@ -104,7 +123,6 @@ class MovieViewSet(
 
         if self.action == "retrieve":
             return MovieDetailSerializer
-
         return MovieSerializer
 
 
@@ -112,6 +130,12 @@ class MovieSessionViewSet(
     AuthenticationMixin,
     ModelViewSet,
 ):
+    """
+    MovieSession endpoint.
+    Permission explicitly set to IsAdminOrIfAuthenticatedReadOnly
+    to override AuthenticationMixin if needed.
+    Admins can manage all sessions, authenticated users can read safely.
+    """
     queryset = (
         MovieSession.objects.all()
         .select_related("movie", "cinema_hall")
@@ -160,11 +184,19 @@ class OrderViewSet(
     CreateModelMixin,
     viewsets.GenericViewSet,
 ):
+    """
+    Order endpoint.
+    Explicitly sets IsAuthenticated because orders
+    are private and only visible to the owner.
+    TokenAuthentication is inherited from AuthenticationMixin.
+    """
     queryset = Order.objects.prefetch_related(
-        "tickets__movie_session__movie", "tickets__movie_session__cinema_hall"
+        "tickets__movie_session__movie",
+        "tickets__movie_session__cinema_hall"
     )
     serializer_class = OrderSerializer
     pagination_class = OrderPagination
+    # only authenticated users can access
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
