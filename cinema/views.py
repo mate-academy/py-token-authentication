@@ -151,9 +151,9 @@ class OrderViewSet(
 
     def get_permissions(self):
         if self.action == "create":
-            return IsAuthenticated
+            return [IsAuthenticated()]
 
-        return IsAdminOrIfAuthenticatedReadOnly
+        return [IsAdminOrIfAuthenticatedReadOnly()]
 
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user)
