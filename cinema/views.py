@@ -14,7 +14,6 @@ from rest_framework.viewsets import ModelViewSet
 from cinema.models import Genre, Actor, CinemaHall, Movie, MovieSession, Order
 from cinema.permissions import (
     AuthenticationMixin,
-    IsAdminOrIfAuthenticatedReadOnly
 )
 from cinema.serializers import (
     GenreSerializer,
@@ -132,8 +131,8 @@ class MovieSessionViewSet(
 ):
     """
     MovieSession endpoint.
-    Permission explicitly set to IsAdminOrIfAuthenticatedReadOnly
-    to override AuthenticationMixin if needed.
+    AuthenticationMixin applies TokenAuthentication and
+    IsAdminOrIfAuthenticatedReadOnly permission by default.
     Admins can manage all sessions, authenticated users can read safely.
     """
     queryset = (
@@ -146,7 +145,6 @@ class MovieSessionViewSet(
         )
     )
     serializer_class = MovieSessionSerializer
-    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
     def get_queryset(self):
         date = self.request.query_params.get("date")
