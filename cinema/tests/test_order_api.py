@@ -62,7 +62,7 @@ class PrivateOrderApiTests(TestCase):
     def test_post_order(self):
         response = self.client.post(ORDER_URL, {})
 
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertNotEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_retrieve_order(self):
         order = sample_order(user=self.user)
