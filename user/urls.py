@@ -1,4 +1,3 @@
-# write your code here
 from django.urls import path
 
 from .views import AuthUserViewSet, ManageUserViewSet, CreateUserView

@@ -39,6 +39,7 @@ class GenreViewSet(
     serializer_class = GenreSerializer
     permission_classes = [IsAdminOrIfAuthenticatedReadOnly]
     authentication_classes = [TokenAuthentication]
+    http_method_names = ["get", "post"]
 
 
 class ActorViewSet(
@@ -50,6 +51,7 @@ class ActorViewSet(
     serializer_class = ActorSerializer
     permission_classes = [IsAdminOrIfAuthenticatedReadOnly]
     authentication_classes = [TokenAuthentication]
+    http_method_names = ["get", "post"]
 
 
 class CinemaHallViewSet(
@@ -61,6 +63,7 @@ class CinemaHallViewSet(
     serializer_class = CinemaHallSerializer
     permission_classes = [IsAdminOrIfAuthenticatedReadOnly]
     authentication_classes = [TokenAuthentication]
+    http_method_names = ["get", "post"]
 
 
 class MovieViewSet(
@@ -73,6 +76,7 @@ class MovieViewSet(
     serializer_class = MovieSerializer
     permission_classes = [IsAdminOrIfAuthenticatedReadOnly]
     authentication_classes = [TokenAuthentication]
+    http_method_names = ["get", "post"]
 
     @staticmethod
     def _params_to_ints(qs):
@@ -166,6 +170,7 @@ class OrderViewSet(
     pagination_class = OrderPagination
     permission_classes = [IsAuthenticated]
     authentication_classes = [TokenAuthentication]
+    http_method_names = ["get", "post"]
 
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user)
