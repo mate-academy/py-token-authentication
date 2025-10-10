@@ -6,7 +6,7 @@ from .views import AuthUserViewSet, ManageUserViewSet, CreateUserView
 app_name = "user"
 
 urlpatterns = [
-    path("login/", AuthUserViewSet.as_view(), name="login_token"),
-    path("me/", ManageUserViewSet.as_view(), name="me"),
-    path("register/", CreateUserView.as_view(), name="register"),
+    path("login/", AuthUserViewSet.as_view(), name="login"),
+    path("me/", ManageUserViewSet.as_view(), name="manage"),
+    path("register/", CreateUserView.as_view(), name="create"),
 ]
