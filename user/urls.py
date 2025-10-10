@@ -1,10 +1,11 @@
 # write your code here
 from django.urls import path
 
-from .views import AuthUserViewSet
+from .views import AuthUserViewSet, ManageUserViewSet
 
-app_name = 'user'
+app_name = "user"
 
 urlpatterns = [
-    path('login/', AuthUserViewSet.as_view(), name='login_token'),
+    path("login/", AuthUserViewSet.as_view(), name="login_token"),
+    path("me/", ManageUserViewSet.as_view(), name="me")
 ]
