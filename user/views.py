@@ -20,3 +20,7 @@ class ManageUserViewSet(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+class CreateUserView(generics.CreateAPIView):
+    serializer_class = UserSerializer
