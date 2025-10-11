@@ -39,7 +39,7 @@ class GenreViewSet(
     serializer_class = GenreSerializer
     permission_classes = [IsAdminOrIfAuthenticatedReadOnly]
     authentication_classes = [TokenAuthentication]
-    http_method_names = ["get", "post"]
+    http_method_names = ["get", "post", "head", "options"]
 
 
 class ActorViewSet(
@@ -51,7 +51,7 @@ class ActorViewSet(
     serializer_class = ActorSerializer
     permission_classes = [IsAdminOrIfAuthenticatedReadOnly]
     authentication_classes = [TokenAuthentication]
-    http_method_names = ["get", "post"]
+    http_method_names = ["get", "post", "head", "options"]
 
 
 class CinemaHallViewSet(
@@ -63,7 +63,7 @@ class CinemaHallViewSet(
     serializer_class = CinemaHallSerializer
     permission_classes = [IsAdminOrIfAuthenticatedReadOnly]
     authentication_classes = [TokenAuthentication]
-    http_method_names = ["get", "post"]
+    http_method_names = ["get", "post", "head", "options"]
 
 
 class MovieViewSet(
@@ -170,10 +170,16 @@ class OrderViewSet(
     pagination_class = OrderPagination
     permission_classes = [IsAuthenticated]
     authentication_classes = [TokenAuthentication]
-    http_method_names = ["get", "post"]
+    http_method_names = ["get", "post", "head", "options"]
 
     def get_queryset(self):
-        return Order.objects.filter(user=self.request.user)
+        return (
+            Order.objects.filter(user=self.request.user)
+            .prefetch_related(
+                "tickets__movie_session__movie",
+                "tickets__movie_session__cinema_hall"
+            )
+        )
 
     def get_serializer_class(self):
         if self.action == "list":
