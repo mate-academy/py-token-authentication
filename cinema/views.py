@@ -3,7 +3,7 @@ from datetime import datetime
 from django.db.models import F, Count
 from rest_framework import viewsets
 from rest_framework.pagination import PageNumberPagination
-
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from cinema.models import Genre, Actor, CinemaHall, Movie, MovieSession, Order
 
 from cinema.serializers import (
@@ -19,21 +19,29 @@ from cinema.serializers import (
     OrderSerializer,
     OrderListSerializer,
 )
+from user.permissions import (
+    Denied,
+    OrderAuthenticatedUsers,
+    RegularAuthenticatedUsers,
+)
 
 
 class GenreViewSet(viewsets.ModelViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
+    permission_classes = RegularAuthenticatedUsers
 
 
 class ActorViewSet(viewsets.ModelViewSet):
     queryset = Actor.objects.all()
     serializer_class = ActorSerializer
+    permission_classes = RegularAuthenticatedUsers
 
 
 class CinemaHallViewSet(viewsets.ModelViewSet):
     queryset = CinemaHall.objects.all()
     serializer_class = CinemaHallSerializer
+    permission_classes = RegularAuthenticatedUsers
 
 
 class MovieViewSet(viewsets.ModelViewSet):
@@ -75,14 +83,22 @@ class MovieViewSet(viewsets.ModelViewSet):
 
         return MovieSerializer
 
+    def get_permissions(self):
+        if self.action in ["list", "retrieve"]:
+            permission_classes = [IsAuthenticated]
+        elif self.action in ["create"]:
+            permission_classes = [IsAdminUser]
+        else:
+            permission_classes = [Denied]
+        return [permission() for permission in permission_classes]
+
 
 class MovieSessionViewSet(viewsets.ModelViewSet):
     queryset = (
         MovieSession.objects.all()
         .select_related("movie", "cinema_hall")
         .annotate(
-            tickets_available=F("cinema_hall__rows")
-            * F("cinema_hall__seats_in_row")
+            tickets_available=F("cinema_hall__rows") * F("cinema_hall__seats_in_row")
             - Count("tickets")
         )
     )
@@ -112,6 +128,24 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
 
         return MovieSessionSerializer
 
+    def get_permissions(self):
+        if self.action in [
+            "list",
+            "retrieve",
+        ]:
+            permission_classes = [IsAuthenticated]
+        elif self.action in [
+            "create",
+            "update",
+            "partial_update",
+            "delete",
+        ]:
+            permission_classes = [IsAdminUser]
+        else:
+            permission_classes = [Denied]
+
+        return [permission() for permission in permission_classes]
+
 
 class OrderPagination(PageNumberPagination):
     page_size = 10
@@ -124,6 +158,7 @@ class OrderViewSet(viewsets.ModelViewSet):
     )
     serializer_class = OrderSerializer
     pagination_class = OrderPagination
+    permission_classes = OrderAuthenticatedUsers
 
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user)
