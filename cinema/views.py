@@ -4,6 +4,7 @@ from django.db.models import F, Count
 from rest_framework import viewsets, mixins
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
 
 from cinema.models import Genre, Actor, CinemaHall, Movie, MovieSession, Order
 from cinema.permissions import IsAdminOrIfAuthenticatedReadOnly
@@ -156,7 +157,7 @@ class OrderViewSet(
     serializer_class = OrderSerializer
     pagination_class = OrderPagination
     authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
+    permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user).prefetch_related(
