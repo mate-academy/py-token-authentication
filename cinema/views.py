@@ -5,7 +5,6 @@ from rest_framework import viewsets, generics, mixins, permissions
 
 from user.permissions import IsAdminOrIfAuthenticatedReadOnly
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.views import APIView
 
 from cinema.models import Genre, Actor, CinemaHall, Movie, MovieSession, Order
 

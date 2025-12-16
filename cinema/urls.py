@@ -41,6 +41,7 @@ urlpatterns = [
         OrderView.as_view(
             {
                 "get": "list",
+                "post": "create",
             }
         ),
         name="order-list",
