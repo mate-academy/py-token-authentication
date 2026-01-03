@@ -117,9 +117,7 @@ class Ticket(models.Model):
         update_fields=None,
     ):
         self.full_clean()
-        return super(Ticket, self).save(
-            force_insert, force_update, using, update_fields
-        )
+        return super(Ticket, self).save()
 
     def __str__(self):
         return (f"{str(self.movie_session)} "
