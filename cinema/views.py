@@ -1,7 +1,6 @@
 from datetime import datetime
 
 from django.db.models import F, Count
-from django.template.context_processors import request
 from rest_framework import viewsets, mixins
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.pagination import PageNumberPagination
@@ -140,13 +139,13 @@ class MovieSessionViewSet(mixins.ListModelMixin,
 
         return MovieSessionSerializer
 
-    def has_permission(self, view):
-        if not request.user or not request.user.is_authenticated:
-            return False
-
-        if view.action == "destroy":
-            return False
-        return True
+    # def has_permission(self, view):
+    #     if not self.request.user or not self.request.user.is_authenticated:
+    #         return False
+    #
+    #     if view.action == "destroy":
+    #         return False
+    #     return True
 
 
 class OrderPagination(PageNumberPagination):
@@ -170,7 +169,7 @@ class OrderViewSet(
     def get_queryset(self):
         user = self.request.user
 
-        return Order.objects.filter(user=user)
+        return self.queryset.filter(user=user)
 
     def get_serializer_class(self):
         if self.action == "list":
