@@ -139,14 +139,6 @@ class MovieSessionViewSet(mixins.ListModelMixin,
 
         return MovieSessionSerializer
 
-    # def has_permission(self, view):
-    #     if not self.request.user or not self.request.user.is_authenticated:
-    #         return False
-    #
-    #     if view.action == "destroy":
-    #         return False
-    #     return True
-
 
 class OrderPagination(PageNumberPagination):
     page_size = 10
