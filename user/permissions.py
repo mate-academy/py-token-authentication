@@ -8,6 +8,5 @@ class IsAdminOrIfAuthenticatedReadOnly(BasePermission):
              and request.user
              and request.user.is_authenticated)
             or (request.user
-                and request.user.is_staff
-                and request.method != "DELETE")
+                and request.user.is_staff)
         )
