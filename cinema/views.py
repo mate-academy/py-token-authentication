@@ -1,8 +1,9 @@
 from datetime import datetime
 
 from django.db.models import F, Count
-from rest_framework import viewsets
+from rest_framework import viewsets, mixins
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
 
 from cinema.models import Genre, Actor, CinemaHall, Movie, MovieSession, Order
 
@@ -20,25 +21,58 @@ from cinema.serializers import (
     OrderListSerializer,
 )
 
+from .permissions.permission import IsAdminOrIfAuthenticatedReadOnly
 
-class GenreViewSet(viewsets.ModelViewSet):
+
+class CinemaPermissionMixin:
+    permission_classes = [IsAdminOrIfAuthenticatedReadOnly]
+
+
+class GenreViewSet(
+    CinemaPermissionMixin,
+    viewsets.GenericViewSet,
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
 
+    http_method_names = ['get', 'post']
 
-class ActorViewSet(viewsets.ModelViewSet):
+
+class ActorViewSet(
+    CinemaPermissionMixin,
+    viewsets.GenericViewSet,
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+):
     queryset = Actor.objects.all()
     serializer_class = ActorSerializer
 
 
-class CinemaHallViewSet(viewsets.ModelViewSet):
+class CinemaHallViewSet(
+    CinemaPermissionMixin,
+    viewsets.GenericViewSet,
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+):
     queryset = CinemaHall.objects.all()
     serializer_class = CinemaHallSerializer
 
+    http_method_names = ['get', 'post']
 
-class MovieViewSet(viewsets.ModelViewSet):
+
+class MovieViewSet(
+    CinemaPermissionMixin,
+    viewsets.GenericViewSet,
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+):
     queryset = Movie.objects.prefetch_related("genres", "actors")
     serializer_class = MovieSerializer
+
+    http_method_names = ['get', 'post']
 
     @staticmethod
     def _params_to_ints(qs):
@@ -76,7 +110,7 @@ class MovieViewSet(viewsets.ModelViewSet):
         return MovieSerializer
 
 
-class MovieSessionViewSet(viewsets.ModelViewSet):
+class MovieSessionViewSet(CinemaPermissionMixin, viewsets.ModelViewSet):
     queryset = (
         MovieSession.objects.all()
         .select_related("movie", "cinema_hall")
@@ -118,14 +152,22 @@ class OrderPagination(PageNumberPagination):
     max_page_size = 100
 
 
-class OrderViewSet(viewsets.ModelViewSet):
+class OrderViewSet(
+    CinemaPermissionMixin,
+    viewsets.GenericViewSet,
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+):
     queryset = Order.objects.prefetch_related(
         "tickets__movie_session__movie", "tickets__movie_session__cinema_hall"
     )
     serializer_class = OrderSerializer
     pagination_class = OrderPagination
+    permission_classes = [IsAuthenticated,]
 
     def get_queryset(self):
+        if self.request.user.is_staff:
+            return Order.objects.all()
         return Order.objects.filter(user=self.request.user)
 
     def get_serializer_class(self):
