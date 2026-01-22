@@ -1,101 +1,73 @@
 from django.test import TestCase
-from django.urls import reverse
 
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from cinema.models import Actor
-from cinema.serializers import ActorSerializer
-from user.tests.test_user_api import create_user
-
-ACTOR_URL = reverse("cinema:actor-list")
 
 
-def sample_actor(**params):
-    defaults = {
-        "first_name": "test_name",
-        "last_name": "test_last",
-    }
-    defaults.update(params)
-
-    return Actor.objects.create(**defaults)
-
-
-class PublicActorApiTests(TestCase):
+class ActorApiTests(TestCase):
     def setUp(self):
         self.client = APIClient()
-
-    def test_auth_required(self):
-        res = self.client.get(ACTOR_URL)
-        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
-
-
-class PrivateActorApiTests(TestCase):
-    def setUp(self):
-        self.user = create_user(
-            username="test_admin",
-            email="test@test.com",
-            password="testpass",
-        )
-        self.client = APIClient()
-        self.client.force_authenticate(user=self.user)
+        Actor.objects.create(first_name="George", last_name="Clooney")
+        Actor.objects.create(first_name="Keanu", last_name="Reeves")
 
     def test_get_actors(self):
-        sample_actor()
-
-        response = self.client.get(ACTOR_URL)
-
-        actors = Actor.objects.all()
-        serializer = ActorSerializer(actors, many=True)
-
+        response = self.client.get("/api/cinema/actors/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, serializer.data)
-
-    def test_post_actors(self):
-        payload = {
-            "first_name": "test_name",
-            "last_name": "test_last",
-        }
-
-        response = self.client.post(ACTOR_URL, payload)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-
-class AdminActorApiTests(TestCase):
-    def setUp(self):
-        self.user = create_user(
-            username="test_admin",
-            email="test@test.com",
-            password="testpass",
-            is_staff=True,
+        actors_full_names = [actor["full_name"] for actor in response.data]
+        self.assertEqual(
+            sorted(actors_full_names), ["George Clooney", "Keanu Reeves"]
         )
-        self.client = APIClient()
-        self.client.force_authenticate(user=self.user)
 
     def test_post_actors(self):
-        payload = {
-            "first_name": "test_name",
-            "last_name": "test_last",
-        }
-
-        response = self.client.post(ACTOR_URL, payload)
+        response = self.client.post(
+            "/api/cinema/actors/",
+            {
+                "first_name": "Scarlett",
+                "last_name": "Johansson",
+            },
+        )
+        db_actors = Actor.objects.all()
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(db_actors.count(), 3)
+        self.assertEqual(db_actors.filter(first_name="Scarlett").count(), 1)
 
-    def test_retrieve_actor(self):
-        sample_actor()
-
-        response = self.client.get(f"{ACTOR_URL}1/")
-
+    def test_get_invalid_actor(self):
+        response = self.client.get("/api/cinema/actors/1001/")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_put_actor(self):
-        sample_actor()
-
-        response = self.client.put(f"{ACTOR_URL}1/", {})
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        response = self.client.put(
+            "/api/cinema/actors/1/",
+            {
+                "first_name": "Scarlett",
+                "last_name": "Johansson",
+            },
+        )
+        actor_pk_1 = Actor.objects.get(pk=1)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            [
+                actor_pk_1.first_name,
+                actor_pk_1.last_name,
+            ],
+            [
+                "Scarlett",
+                "Johansson",
+            ],
+        )
 
     def test_delete_actor(self):
-        sample_actor()
+        response = self.client.delete(
+            "/api/cinema/actors/1/",
+        )
+        db_actors_id_1 = Actor.objects.filter(id=1)
+        self.assertEqual(db_actors_id_1.count(), 0)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
-        response = self.client.delete(f"{ACTOR_URL}1/")
+    def test_delete_invalid_actor(self):
+        response = self.client.delete(
+            "/api/cinema/actors/1000/",
+        )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
