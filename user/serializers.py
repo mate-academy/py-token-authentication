@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
+
 class UserRegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=5)
     password2 = serializers.CharField(write_only=True, min_length=5)
@@ -28,6 +29,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             password=validated_data["password"]
         )
         return user
+
 
 class UserMeSerializer(serializers.ModelSerializer):
     class Meta:
