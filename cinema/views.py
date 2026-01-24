@@ -27,7 +27,6 @@ from cinema.serializers import (
     OrderSerializer,
     OrderListSerializer,
 )
-from .permissions import IsAdminOrIfAuthenticatedReadOnly
 
 
 class GenreViewSet(
@@ -37,8 +36,6 @@ class GenreViewSet(
 ):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
-    http_method_names = ["get", "post"]
 
 
 class ActorViewSet(
@@ -48,8 +45,6 @@ class ActorViewSet(
 ):
     queryset = Actor.objects.all()
     serializer_class = ActorSerializer
-    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
-    http_method_names = ["get", "post"]
 
 
 class CinemaHallViewSet(
@@ -59,15 +54,16 @@ class CinemaHallViewSet(
 ):
     queryset = CinemaHall.objects.all()
     serializer_class = CinemaHallSerializer
-    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
-    http_method_names = ["get", "post"]
 
 
-class MovieViewSet(viewsets.ModelViewSet):
+class MovieViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet
+):
     queryset = Movie.objects.prefetch_related("genres", "actors")
     serializer_class = MovieSerializer
-    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
-    http_method_names = ["get", "post"]
 
     @staticmethod
     def _params_to_ints(qs):
@@ -105,7 +101,14 @@ class MovieViewSet(viewsets.ModelViewSet):
         return MovieSerializer
 
 
-class MovieSessionViewSet(viewsets.ModelViewSet):
+class MovieSessionViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet
+):
     queryset = (
         MovieSession.objects.all()
         .select_related("movie", "cinema_hall")
@@ -116,10 +119,6 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
         )
     )
     serializer_class = MovieSessionSerializer
-    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
-    http_method_names = [
-        "get", "post", "put", "patch", "delete"
-    ]
 
     def get_queryset(self):
         date = self.request.query_params.get("date")
@@ -162,7 +161,6 @@ class OrderViewSet(
     serializer_class = OrderSerializer
     pagination_class = OrderPagination
     permission_classes = (IsAuthenticated,)
-    http_method_names = ["get", "post"]
 
     def get_queryset(self):
         return self.queryset.filter(user=self.request.user)
