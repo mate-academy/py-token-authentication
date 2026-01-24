@@ -1,4 +1,4 @@
-# user/views.py
+# user/views.py (Ajustado)
 from rest_framework import generics, permissions
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
@@ -30,7 +30,7 @@ class LoginView(APIView):
             token, created = Token.objects.get_or_create(user=user)
             return Response({"token": token.key})
         else:
-            # Linha quebrada para não exceder 79 caracteres
+            # Quebrado para não exceder 79 caracteres
             return Response(
                 {"detail": "Usuário ou senha inválidos."}, status=401
             )
@@ -48,5 +48,7 @@ class UserMeView(generics.RetrieveUpdateAPIView):
 
     def get_queryset(self):
         # Garantir que o queryset seja apenas o usuário atual (para RetrieveUpdateAPIView funcionar com get_object)
-        # Linha quebrada para não exceder 79 caracteres
-        return User.objects.filter(pk=self.request.user.pk)
+        # Quebrado para não exceder 79 caracteres
+        return User.objects.filter(
+            pk=self.request.user.pk
+        )

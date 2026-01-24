@@ -1,4 +1,4 @@
-# user/serializers.py
+# user/serializers.py (Ajustado)
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 
@@ -35,4 +35,7 @@ class UserMeSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ("id", "username", "email", "is_staff")
-        read_only_fields = ("id", "is_staff")  # Não pode ser alterado pelo PUT/PATCH
+        read_only_fields = ( # Quebrado para não exceder 79 caracteres
+            "id",
+            "is_staff"
+        )
