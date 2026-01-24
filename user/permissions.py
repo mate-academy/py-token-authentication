@@ -1,3 +1,5 @@
+# user/permissions.py
+
 from rest_framework import permissions
 
 
@@ -14,7 +16,8 @@ class IsAdminOrIfAuthenticatedReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        # Permitir requisições de escrita (POST, PUT, PATCH, DELETE) apenas para Staff (Admin)
+        # Permitir requisições de escrita (POST, PUT, PATCH, DELETE) 
+        # apenas para Staff (Admin)
         return request.user and request.user.is_staff
 
     def has_object_permission(self, request, view, obj):
@@ -22,11 +25,10 @@ class IsAdminOrIfAuthenticatedReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        # Se o usuário for staff, ele pode fazer o que o ViewSet permitir (já controlado pelo has_permission/actions)
+        # Se o usuário for staff, ele pode fazer o que o ViewSet permitir
         if request.user and request.user.is_staff:
             return True
 
-        # Usuários normais autenticados (não-staff) são restritos pelas ações definidas no ViewSet
-        # e pela regra geral de is_staff acima. Para escritas não-staff, será False,
-        # exceto em casos muito específicos (como o OrderViewSet onde validaremos a autoria no View).
+        # Usuários normais autenticados (não-staff) são restritos pelas ações 
+        # definidas no ViewSet e pela regra geral de is_staff acima.
         return False
