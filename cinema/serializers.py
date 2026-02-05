@@ -7,8 +7,8 @@ from cinema.models import (
     CinemaHall,
     Movie,
     MovieSession,
-    Ticket,
     Order,
+    Ticket,
 )
 
 
@@ -86,7 +86,10 @@ class TicketSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         data = super(TicketSerializer, self).validate(attrs=attrs)
         Ticket.validate_ticket(
-            attrs["row"], attrs["seat"], attrs["movie_session"]
+            attrs["row"],
+            attrs["seat"],
+            attrs["movie_session"].cinema_hall,
+            serializers.ValidationError
         )
         return data
 
@@ -99,7 +102,7 @@ class TicketListSerializer(TicketSerializer):
     movie_session = MovieSessionListSerializer(many=False, read_only=True)
 
 
-class TicketSeatsSerializer(TicketSerializer):
+class TicketSeatsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ticket
         fields = ("row", "seat")
