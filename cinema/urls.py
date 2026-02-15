@@ -1,3 +1,4 @@
+from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
 
@@ -10,6 +11,8 @@ from cinema.views import (
     OrderViewSet,
 )
 
+app_name = 'cinema'
+
 router = routers.DefaultRouter()
 router.register("genres", GenreViewSet)
 router.register("actors", ActorViewSet)
@@ -18,6 +21,8 @@ router.register("movies", MovieViewSet)
 router.register("movie_sessions", MovieSessionViewSet)
 router.register("orders", OrderViewSet)
 
-urlpatterns = [path("", include(router.urls))]
-
-app_name = "cinema"
+urlpatterns = [
+    path('', include(router.urls)),
+    path('admin/', admin.site.urls),
+    path('api/user/', include('user.urls', namespace='user')),
+]
