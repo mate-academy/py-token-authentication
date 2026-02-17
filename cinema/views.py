@@ -1,138 +1,150 @@
-from datetime import datetime
-
-from django.db.models import F, Count
-from rest_framework import viewsets
-from rest_framework.pagination import PageNumberPagination
-
-from cinema.models import Genre, Actor, CinemaHall, Movie, MovieSession, Order
-
-from cinema.serializers import (
-    GenreSerializer,
-    ActorSerializer,
-    CinemaHallSerializer,
-    MovieSerializer,
-    MovieSessionSerializer,
-    MovieSessionListSerializer,
-    MovieDetailSerializer,
-    MovieSessionDetailSerializer,
-    MovieListSerializer,
-    OrderSerializer,
-    OrderListSerializer,
-)
+from rest_framework import generics, permissions, viewsets, status
+from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
+from .models import Actor, CinemaHall, Genre, Movie, MovieSession, Order
+from .serializers import ActorSerializer, CinemaHallSerializer, GenreSerializer, MovieSerializer, MovieSessionSerializer, OrderSerializer
 
 
-class GenreViewSet(viewsets.ModelViewSet):
-    queryset = Genre.objects.all()
-    serializer_class = GenreSerializer
-
-
+# =======================
+# Actor Views
+# =======================
 class ActorViewSet(viewsets.ModelViewSet):
     queryset = Actor.objects.all()
     serializer_class = ActorSerializer
 
+    def get_permissions(self):
+        # Admin só para ações de escrita
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            permission_classes = [IsAdminUser]
+        else:
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
 
-class CinemaHallViewSet(viewsets.ModelViewSet):
+    def create(self, request, *args, **kwargs):
+        if not request.user.is_staff:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        return super().create(request, *args, **kwargs)
+
+
+class AdminActorApiView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Actor.objects.all()
+    serializer_class = ActorSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+    def get_object(self):
+        return get_object_or_404(Actor, pk=self.kwargs.get("pk"))
+
+class PrivateActorApiView(generics.ListCreateAPIView):
+    queryset = Actor.objects.all()
+    serializer_class = ActorSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        if not request.user.is_staff:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        return super().create(request, *args, **kwargs)
+
+
+# =======================
+# Cinema Hall Views
+# =======================
+
+class AdminCinemaHallApiView(generics.RetrieveUpdateDestroyAPIView):
     queryset = CinemaHall.objects.all()
     serializer_class = CinemaHallSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+    def get_object(self):
+        return get_object_or_404(CinemaHall, pk=self.kwargs.get("pk"))
+
+class PrivateCinemaHallApiView(generics.ListCreateAPIView):
+    queryset = CinemaHall.objects.all()
+    serializer_class = CinemaHallSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        if not request.user.is_staff:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        return super().create(request, *args, **kwargs)
 
 
-class MovieViewSet(viewsets.ModelViewSet):
-    queryset = Movie.objects.prefetch_related("genres", "actors")
+# =======================
+# Genre Views
+# =======================
+
+class AdminGenreApiView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+    def get_object(self):
+        return get_object_or_404(Genre, pk=self.kwargs.get("pk"))
+
+class PrivateGenreApiView(generics.ListCreateAPIView):
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        if not request.user.is_staff:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        return super().create(request, *args, **kwargs)
+
+
+# =======================
+# Movie Views
+# =======================
+
+class AdminMovieApiView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Movie.objects.all()
     serializer_class = MovieSerializer
+    permission_classes = [permissions.IsAdminUser]
 
-    @staticmethod
-    def _params_to_ints(qs):
-        """Converts a list of string IDs to a list of integers"""
-        return [int(str_id) for str_id in qs.split(",")]
+    def get_object(self):
+        return get_object_or_404(Movie, pk=self.kwargs.get("pk"))
 
-    def get_queryset(self):
-        """Retrieve the movies with filters"""
-        title = self.request.query_params.get("title")
-        genres = self.request.query_params.get("genres")
-        actors = self.request.query_params.get("actors")
+class PrivateMovieApiView(generics.ListCreateAPIView):
+    queryset = Movie.objects.all()
+    serializer_class = MovieSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
-        queryset = self.queryset
-
-        if title:
-            queryset = queryset.filter(title__icontains=title)
-
-        if genres:
-            genres_ids = self._params_to_ints(genres)
-            queryset = queryset.filter(genres__id__in=genres_ids)
-
-        if actors:
-            actors_ids = self._params_to_ints(actors)
-            queryset = queryset.filter(actors__id__in=actors_ids)
-
-        return queryset.distinct()
-
-    def get_serializer_class(self):
-        if self.action == "list":
-            return MovieListSerializer
-
-        if self.action == "retrieve":
-            return MovieDetailSerializer
-
-        return MovieSerializer
+    def create(self, request, *args, **kwargs):
+        if not request.user.is_staff:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        return super().create(request, *args, **kwargs)
 
 
-class MovieSessionViewSet(viewsets.ModelViewSet):
-    queryset = (
-        MovieSession.objects.all()
-        .select_related("movie", "cinema_hall")
-        .annotate(
-            tickets_available=F("cinema_hall__rows")
-            * F("cinema_hall__seats_in_row")
-            - Count("tickets")
-        )
-    )
+# =======================
+# MovieSession Views
+# =======================
+
+class PrivateMovieSessionApiView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = MovieSession.objects.all()
     serializer_class = MovieSessionSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
-    def get_queryset(self):
-        date = self.request.query_params.get("date")
-        movie_id_str = self.request.query_params.get("movie")
+    def get_object(self):
+        return get_object_or_404(MovieSession, pk=self.kwargs.get("pk"))
 
-        queryset = self.queryset
-
-        if date:
-            date = datetime.strptime(date, "%Y-%m-%d").date()
-            queryset = queryset.filter(show_time__date=date)
-
-        if movie_id_str:
-            queryset = queryset.filter(movie_id=int(movie_id_str))
-
-        return queryset
-
-    def get_serializer_class(self):
-        if self.action == "list":
-            return MovieSessionListSerializer
-
-        if self.action == "retrieve":
-            return MovieSessionDetailSerializer
-
-        return MovieSessionSerializer
+    def create(self, request, *args, **kwargs):
+        if not request.user.is_staff:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        return super().create(request, *args, **kwargs)
 
 
-class OrderPagination(PageNumberPagination):
-    page_size = 10
-    max_page_size = 100
+# =======================
+# Order Views
+# =======================
 
-
-class OrderViewSet(viewsets.ModelViewSet):
-    queryset = Order.objects.prefetch_related(
-        "tickets__movie_session__movie", "tickets__movie_session__cinema_hall"
-    )
+class PrivateOrderApiView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Order.objects.all()
     serializer_class = OrderSerializer
-    pagination_class = OrderPagination
+    permission_classes = [permissions.IsAuthenticated]
 
-    def get_queryset(self):
-        return Order.objects.filter(user=self.request.user)
+    def get_object(self):
+        return get_object_or_404(Order, pk=self.kwargs.get("pk"))
 
-    def get_serializer_class(self):
-        if self.action == "list":
-            return OrderListSerializer
-
-        return OrderSerializer
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+    def create(self, request, *args, **kwargs):
+        if not request.user.is_staff:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        return super().create(request, *args, **kwargs)
