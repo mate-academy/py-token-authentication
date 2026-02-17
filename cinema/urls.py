@@ -1,23 +1,36 @@
-from django.urls import path, include
-from rest_framework import routers
-
-from cinema.views import (
-    GenreViewSet,
-    ActorViewSet,
-    CinemaHallViewSet,
-    MovieViewSet,
-    MovieSessionViewSet,
-    OrderViewSet,
+# cinema/urls.py
+from django.urls import path
+from .views import (
+    AdminActorApiView, PrivateActorApiView,
+    AdminCinemaHallApiView, PrivateCinemaHallApiView,
+    AdminGenreApiView, PrivateGenreApiView,
+    AdminMovieApiView, PrivateMovieApiView,
+    PrivateMovieSessionApiView,
+    PrivateOrderApiView,
 )
 
-router = routers.DefaultRouter()
-router.register("genres", GenreViewSet)
-router.register("actors", ActorViewSet)
-router.register("cinema_halls", CinemaHallViewSet)
-router.register("movies", MovieViewSet)
-router.register("movie_sessions", MovieSessionViewSet)
-router.register("orders", OrderViewSet)
-
-urlpatterns = [path("", include(router.urls))]
-
 app_name = "cinema"
+
+urlpatterns = [
+    # actors
+    path("actors/", PrivateActorApiView.as_view()),
+    path("actors/admin/", AdminActorApiView.as_view()),
+
+    # cinema halls
+    path("cinema-halls/", PrivateCinemaHallApiView.as_view()),
+    path("cinema-halls/admin/", AdminCinemaHallApiView.as_view()),
+
+    # genres
+    path("genres/", PrivateGenreApiView.as_view()),
+    path("genres/admin/", AdminGenreApiView.as_view()),
+
+    # movies
+    path("movies/", PrivateMovieApiView.as_view()),
+    path("movies/admin/", AdminMovieApiView.as_view()),
+
+    # movie sessions
+    path("movie-sessions/", PrivateMovieSessionApiView.as_view()),
+
+    # orders
+    path("orders/", PrivateOrderApiView.as_view()),
+]
