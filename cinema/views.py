@@ -1,8 +1,16 @@
 from rest_framework import generics, permissions, viewsets, status
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from .models import Actor, CinemaHall, Genre, Movie, MovieSession, Order
-from .serializers import ActorSerializer, CinemaHallSerializer, GenreSerializer, MovieSerializer, MovieSessionSerializer, OrderSerializer
+from .serializers import (
+    ActorSerializer,
+    CinemaHallSerializer,
+    GenreSerializer,
+    MovieSerializer,
+    MovieSessionSerializer,
+    OrderSerializer
+)
 
 
 # =======================
@@ -14,7 +22,7 @@ class ActorViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         # Admin só para ações de escrita
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+        if self.action in ["create", "update", "partial_update", "destroy"]:
             permission_classes = [IsAdminUser]
         else:
             permission_classes = [IsAuthenticated]
@@ -34,6 +42,7 @@ class AdminActorApiView(generics.RetrieveUpdateDestroyAPIView):
     def get_object(self):
         return get_object_or_404(Actor, pk=self.kwargs.get("pk"))
 
+
 class PrivateActorApiView(generics.ListCreateAPIView):
     queryset = Actor.objects.all()
     serializer_class = ActorSerializer
@@ -49,6 +58,7 @@ class PrivateActorApiView(generics.ListCreateAPIView):
 # Cinema Hall Views
 # =======================
 
+
 class AdminCinemaHallApiView(generics.RetrieveUpdateDestroyAPIView):
     queryset = CinemaHall.objects.all()
     serializer_class = CinemaHallSerializer
@@ -56,6 +66,7 @@ class AdminCinemaHallApiView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_object(self):
         return get_object_or_404(CinemaHall, pk=self.kwargs.get("pk"))
+
 
 class PrivateCinemaHallApiView(generics.ListCreateAPIView):
     queryset = CinemaHall.objects.all()
@@ -72,6 +83,7 @@ class PrivateCinemaHallApiView(generics.ListCreateAPIView):
 # Genre Views
 # =======================
 
+
 class AdminGenreApiView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
@@ -79,6 +91,7 @@ class AdminGenreApiView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_object(self):
         return get_object_or_404(Genre, pk=self.kwargs.get("pk"))
+
 
 class PrivateGenreApiView(generics.ListCreateAPIView):
     queryset = Genre.objects.all()
@@ -95,6 +108,7 @@ class PrivateGenreApiView(generics.ListCreateAPIView):
 # Movie Views
 # =======================
 
+
 class AdminMovieApiView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Movie.objects.all()
     serializer_class = MovieSerializer
@@ -102,6 +116,7 @@ class AdminMovieApiView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_object(self):
         return get_object_or_404(Movie, pk=self.kwargs.get("pk"))
+
 
 class PrivateMovieApiView(generics.ListCreateAPIView):
     queryset = Movie.objects.all()
@@ -117,6 +132,7 @@ class PrivateMovieApiView(generics.ListCreateAPIView):
 # =======================
 # MovieSession Views
 # =======================
+
 
 class PrivateMovieSessionApiView(generics.RetrieveUpdateDestroyAPIView):
     queryset = MovieSession.objects.all()
@@ -135,6 +151,7 @@ class PrivateMovieSessionApiView(generics.RetrieveUpdateDestroyAPIView):
 # =======================
 # Order Views
 # =======================
+
 
 class PrivateOrderApiView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Order.objects.all()
