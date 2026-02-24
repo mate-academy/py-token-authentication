@@ -115,11 +115,11 @@ class Ticket(models.Model):
         force_update=False,
         using=None,
         update_fields=None,
+        *args,
+        **kwargs
     ):
         self.full_clean()
-        return super(Ticket, self).save(
-            force_insert, force_update, using, update_fields
-        )
+        return super(Ticket, self).save(*args, **kwargs)
 
     def __str__(self):
         return (f"{str(self.movie_session)} "
