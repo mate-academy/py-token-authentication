@@ -32,6 +32,7 @@ class ListCreateViewSet(
     """ViewSet for list or create"""
     pass
 
+
 class GenreViewSet(ListCreateViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer

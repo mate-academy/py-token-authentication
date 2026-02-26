@@ -6,6 +6,7 @@ from rest_framework.settings import api_settings
 
 from user.serializers import UserSerializer
 
+
 class CreateUserList(generics.CreateAPIView):
     serializer_class = UserSerializer
 
