@@ -1,1 +1,4 @@
-# write your code here
+from django.urls import path, include
+
+app_name = 'user'
+
