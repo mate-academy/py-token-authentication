@@ -1,8 +1,19 @@
 from datetime import datetime
 
 from django.db.models import F, Count
+from rest_framework.renderers import (
+    BrowsableAPIRenderer, JSONRenderer
+)
 from rest_framework import viewsets
+from rest_framework import status
+from rest_framework.generics import (
+    ListCreateAPIView,
+    RetrieveAPIView
+)
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.settings import DEFAULTS
 
 from cinema.models import Genre, Actor, CinemaHall, Movie, MovieSession, Order
 
@@ -21,59 +32,60 @@ from cinema.serializers import (
 )
 
 
-class GenreViewSet(viewsets.ModelViewSet):
+class GenreViewSet(ListCreateAPIView):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
 
 
-class ActorViewSet(viewsets.ModelViewSet):
+class ActorViewSet(ListCreateAPIView):
     queryset = Actor.objects.all()
     serializer_class = ActorSerializer
 
 
-class CinemaHallViewSet(viewsets.ModelViewSet):
+class CinemaHallViewSet(ListCreateAPIView):
     queryset = CinemaHall.objects.all()
     serializer_class = CinemaHallSerializer
 
 
-class MovieViewSet(viewsets.ModelViewSet):
-    queryset = Movie.objects.prefetch_related("genres", "actors")
-    serializer_class = MovieSerializer
+class MovieViewSet(viewsets.ViewSet):
+    queryset = Movie.objects.all().prefetch_related(
+        "genres", "actors"
+    )
 
     @staticmethod
-    def _params_to_ints(qs):
-        """Converts a list of string IDs to a list of integers"""
-        return [int(str_id) for str_id in qs.split(",")]
+    def query_params_to_int_list(query_params: str) -> list:
+        return [int(i) for i in query_params.split(",")]
 
-    def get_queryset(self):
-        """Retrieve the movies with filters"""
-        title = self.request.query_params.get("title")
-        genres = self.request.query_params.get("genres")
-        actors = self.request.query_params.get("actors")
-
-        queryset = self.queryset
+    def list(self, request):
+        title = request.query_params.get("title", None)
+        genres = request.query_params.get("genres", None)
+        actors = request.query_params.get("actors", None)
 
         if title:
-            queryset = queryset.filter(title__icontains=title)
+            self.queryset = self.queryset.filter(title__icontains=title)
 
         if genres:
-            genres_ids = self._params_to_ints(genres)
-            queryset = queryset.filter(genres__id__in=genres_ids)
+            genres_ids = self.query_params_to_int_list(genres)
+            self.queryset = self.queryset.filter(genres__id__in=genres_ids)
 
         if actors:
-            actors_ids = self._params_to_ints(actors)
-            queryset = queryset.filter(actors__id__in=actors_ids)
+            actors_ids = self.query_params_to_int_list(actors)
+            self.queryset = self.queryset.filter(actors__id__in=actors_ids)
 
-        return queryset.distinct()
+        serializer = MovieListSerializer(self.queryset, many=True)
 
-    def get_serializer_class(self):
-        if self.action == "list":
-            return MovieListSerializer
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
-        if self.action == "retrieve":
-            return MovieDetailSerializer
+    def create(self, request):
+        serializer = MovieSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        return MovieSerializer
+    def retrieve(self, request, pk=None):
+        movie = Movie.objects.get(pk=pk)
+        serializer = MovieDetailSerializer(movie)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class MovieSessionViewSet(viewsets.ModelViewSet):
@@ -81,9 +93,11 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
         MovieSession.objects.all()
         .select_related("movie", "cinema_hall")
         .annotate(
-            tickets_available=F("cinema_hall__rows")
-            * F("cinema_hall__seats_in_row")
-            - Count("tickets")
+            tickets_available=(
+                F("cinema_hall__rows")
+                * F("cinema_hall__seats_in_row")
+                - Count("tickets")
+            )
         )
     )
     serializer_class = MovieSessionSerializer
@@ -118,21 +132,56 @@ class OrderPagination(PageNumberPagination):
     max_page_size = 100
 
 
-class OrderViewSet(viewsets.ModelViewSet):
-    queryset = Order.objects.prefetch_related(
-        "tickets__movie_session__movie", "tickets__movie_session__cinema_hall"
-    )
-    serializer_class = OrderSerializer
+class OrderCreateListViewSet(viewsets.ViewSet):
+    # The style to use for queryset pagination.
     pagination_class = OrderPagination
+    permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        return Order.objects.filter(user=self.request.user)
+    def list(self, request, *args, **kwargs):
+        queryset = Order.objects.prefetch_related(
+            "tickets__movie_session__movie",
+            "tickets__movie_session__cinema_hall"
+        ).filter(user=request.user)
 
-    def get_serializer_class(self):
-        if self.action == "list":
-            return OrderListSerializer
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = OrderListSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
 
-        return OrderSerializer
+        serializer = OrderListSerializer(queryset, many=True)
+        return Response(serializer.data)
 
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+    def create(self, request):
+        serializer = OrderSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(user=request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @property
+    def paginator(self):
+        """
+        The paginator instance associated with the view, or `None`.
+        """
+        if not hasattr(self, "_paginator"):
+            if self.pagination_class is None:
+                self._paginator = None
+            else:
+                self._paginator = self.pagination_class()
+        return self._paginator
+
+    def paginate_queryset(self, queryset):
+        """
+        Return a single page of results, or `None` if pagination is disabled.
+        """
+        if self.paginator is None:
+            return None
+        return self.paginator.paginate_queryset(
+            queryset, self.request, view=self
+        )
+
+    def get_paginated_response(self, data):
+        """
+        Return a paginated style `Response` object for the given output data.
+        """
+        assert self.paginator is not None
+        return self.paginator.get_paginated_response(data)
