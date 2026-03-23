@@ -99,3 +99,4 @@ class AdminActorApiTests(TestCase):
 
         response = self.client.delete(f"{ACTOR_URL}1/")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+

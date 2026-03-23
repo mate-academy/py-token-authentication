@@ -91,3 +91,4 @@ class AdminGenreApiTests(TestCase):
 
         response = self.client.delete(f"{GENRE_URL}1/")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+

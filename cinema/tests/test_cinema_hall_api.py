@@ -103,3 +103,4 @@ class AdminCinemaHallApiTests(TestCase):
 
         response = self.client.delete(f"{CINEMA_HALL_URL}1/")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
