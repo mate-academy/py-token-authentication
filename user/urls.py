@@ -2,7 +2,7 @@ from django.urls import path
 
 from user.views import CreateUserView, LoginUserView, ManageUserView
 
-app_name = "cinema"
+app_name = "user"
 
 urlpatterns = [
     path("register/", CreateUserView.as_view(), name="create"),
