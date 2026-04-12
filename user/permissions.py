@@ -13,3 +13,9 @@ class IsAdminOrIfAuthenticatedReadOnly(BasePermission):
                 or request.user.is_staff
             )
         )
+
+
+class IsAdminAllORIsAuthenticatedReadOnly(
+    IsAdminOrIfAuthenticatedReadOnly
+):
+    pass
