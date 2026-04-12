@@ -1,6 +1,5 @@
 from django.contrib.auth import get_user_model
-
-from cinema import serializers
+from rest_framework import serializers
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -13,11 +12,11 @@ class UserSerializer(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
-        """crate user with encrypted password"""
+        """Create user with encrypted password."""
         return get_user_model().objects.create_user(**validated_data)
 
     def update(self, instance, validated_data):
-        """Update User with encrypted password"""
+        """Update user with encrypted password."""
         password = validated_data.pop("password", None)
         user = super().update(instance, validated_data)
 
