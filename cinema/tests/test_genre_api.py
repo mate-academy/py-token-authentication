@@ -15,7 +15,7 @@ def sample_genres(**params):
     defaults = {"name": "Poem"}
     defaults.update(params)
 
-    return Genre.objects.create(**params)
+    return Genre.objects.create(**defaults)
 
 
 class PublicGenresApiTests(TestCase):
