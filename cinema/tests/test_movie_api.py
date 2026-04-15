@@ -115,7 +115,7 @@ class AdminMovieApiTests(TestCase):
 
         response = self.client.put(url, payload)
         self.assertEqual(
-            response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED
+            response.status_code, status.HTTP_403_FORBIDDEN
         )
 
     def test_delete_movie(self):
@@ -125,5 +125,5 @@ class AdminMovieApiTests(TestCase):
         response = self.client.delete(url)
 
         self.assertEqual(
-            response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED
+            response.status_code, status.HTTP_403_FORBIDDEN
         )
