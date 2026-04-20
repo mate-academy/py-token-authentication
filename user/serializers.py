@@ -6,7 +6,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = ("id", "username", "email", "password", "is_staff")
-        read_only = ("id", "is_staff")
+        read_only_fields = ("id", "is_staff")
         extra_kwargs = {
             "password": {
                 "write_only": True,
@@ -22,5 +22,5 @@ class UserSerializer(serializers.ModelSerializer):
         user = super().update(instance, validated_data)
         if password:
             user.set_password(password)
-            user.save
+            user.save()
         return user
