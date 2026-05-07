@@ -10,6 +10,7 @@ from cinema.models import (
     Ticket,
     Order,
 )
+from cinema.permissions import IsAdminOrIfAuthenticatedReadOnly
 
 
 class GenreSerializer(serializers.ModelSerializer):
