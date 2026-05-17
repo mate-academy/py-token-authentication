@@ -1,9 +1,8 @@
 from datetime import datetime
 
 from django.db.models import Count, F
-from rest_framework import mixins, viewsets
+from rest_framework import mixins, pagination, viewsets
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 
 from cinema.models import Actor, CinemaHall, Genre, Movie, MovieSession, Order
@@ -143,7 +142,7 @@ class MovieSessionViewSet(
         return MovieSessionSerializer
 
 
-class OrderPagination(PageNumberPagination):
+class OrderPagination(pagination.PageNumberPagination):
     page_size = 10
     max_page_size = 100
 
