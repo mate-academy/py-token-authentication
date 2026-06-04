@@ -117,13 +117,18 @@ class Ticket(models.Model):
         update_fields=None,
     ):
         self.full_clean()
-        return super(Ticket, self).save(
-            force_insert, force_update, using, update_fields
+        return super().save(
+            force_insert=force_insert,
+            force_update=force_update,
+            using=using,
+            update_fields=update_fields,
         )
 
     def __str__(self):
-        return (f"{str(self.movie_session)} "
-                f"(row: {self.row}, seat: {self.seat})")
+        return (
+            f"{str(self.movie_session)} "
+            f"(row: {self.row}, seat: {self.seat})"
+        )
 
     class Meta:
         unique_together = ("movie_session", "row", "seat")
