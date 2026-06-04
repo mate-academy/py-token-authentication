@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, mixins, permissions
 from cinema.models import (
     Genre,
     CinemaHall,
@@ -17,22 +17,39 @@ from cinema.serializers import (
 )
 from cinema.permissions import IsAdminOrIfAuthenticatedReadOnly
 
-class GenreViewSet(viewsets.ModelViewSet):
+class GenreViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    viewsets.GenericViewSet
+):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
-class CinemaHallViewSet(viewsets.ModelViewSet):
+class CinemaHallViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    viewsets.GenericViewSet
+):
     queryset = CinemaHall.objects.all()
     serializer_class = CinemaHallSerializer
     permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
-class ActorViewSet(viewsets.ModelViewSet):
+class ActorViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    viewsets.GenericViewSet
+):
     queryset = Actor.objects.all()
     serializer_class = ActorSerializer
     permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
-class MovieViewSet(viewsets.ModelViewSet):
+class MovieViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet
+):
     queryset = Movie.objects.all()
     serializer_class = MovieSerializer
     permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
@@ -42,7 +59,11 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
     serializer_class = MovieSessionSerializer
     permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
-class OrderViewSet(viewsets.ModelViewSet):
+class OrderViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    viewsets.GenericViewSet
+):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
     permission_classes = (permissions.IsAuthenticated,)
