@@ -38,6 +38,7 @@ class ActorViewSet(
     queryset = Actor.objects.all()
     serializer_class = ActorSerializer
 
+
 class CinemaHallViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
@@ -70,9 +71,13 @@ class MovieViewSet(
         if title:
             queryset = queryset.filter(title__icontains=title)
         if genres:
-            queryset = queryset.filter(genres__id__in=self._params_to_ints(genres))
+            queryset = queryset.filter(
+                genres__id__in=self._params_to_ints(genres)
+            )
         if actors:
-            queryset = queryset.filter(actors__id__in=self._params_to_ints(actors))
+            queryset = queryset.filter(
+                actors__id__in=self._params_to_ints(actors)
+            )
 
         return queryset.distinct()
 
@@ -84,7 +89,7 @@ class MovieViewSet(
         return MovieSerializer
 
 
-class MovieSessionViewSet(viewsets.ModelViewSet):  # all actions allowed
+class MovieSessionViewSet(viewsets.ModelViewSet):
     queryset = (
         MovieSession.objects.all()
         .select_related("movie", "cinema_hall")
@@ -103,7 +108,6 @@ class MovieSessionViewSet(viewsets.ModelViewSet):  # all actions allowed
         queryset = self.queryset
 
         if date:
-            from datetime import datetime
             date = datetime.strptime(date, "%Y-%m-%d").date()
             queryset = queryset.filter(show_time__date=date)
         if movie_id_str:
@@ -135,7 +139,9 @@ class OrderViewSet(
     )
     serializer_class = OrderSerializer
     pagination_class = OrderPagination
-    permission_classes = (permissions.IsAuthenticated,)  # any auth user, not just staff
+    permission_classes = (
+        permissions.IsAuthenticated,
+    )
 
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user)
