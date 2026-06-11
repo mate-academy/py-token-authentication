@@ -1,5 +1,7 @@
 from django.db import transaction
+from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
+from django.contrib.auth import get_user_model
 
 from cinema.models import (
     Genre,
@@ -85,9 +87,12 @@ class MovieSessionListSerializer(MovieSessionSerializer):
 class TicketSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         data = super(TicketSerializer, self).validate(attrs=attrs)
-        Ticket.validate_ticket(
-            attrs["row"], attrs["seat"], attrs["movie_session"]
-        )
+        try:
+            Ticket.validate_ticket(
+                attrs["row"], attrs["seat"], attrs["movie_session"]
+            )
+        except DjangoValidationError as error:
+            raise serializers.ValidationError(error.message_dict)
         return data
 
     class Meta:
@@ -135,3 +140,28 @@ class OrderSerializer(serializers.ModelSerializer):
 
 class OrderListSerializer(OrderSerializer):
     tickets = TicketListSerializer(many=True, read_only=True)
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = get_user_model()
+        fields = ("id", "username", "email", "password", "is_staff")
+        read_only_fields = ("id", "is_staff")
+        extra_kwargs = {
+            "password": {
+                "write_only": True,
+                "min_length": 5,
+                "style": {"input_type": "password"},
+            }
+        }
+
+    def create(self, validated_data):
+        return get_user_model().objects.create_user(**validated_data)
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop("password", None)
+        user = super().update(instance, validated_data)
+        if password:
+            user.set_password(password)
+            user.save()
+        return user
