@@ -30,12 +30,7 @@ class GenreViewSet(
 ):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (IsAdminUser,)
-
-    def get_permissions(self):
-        if self.action == "list":
-            return (IsAuthenticated(),)
-        return super().get_permissions()
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
 
 class ActorViewSet(
@@ -45,12 +40,7 @@ class ActorViewSet(
 ):
     queryset = Actor.objects.all()
     serializer_class = ActorSerializer
-    permission_classes = (IsAdminUser,)
-
-    def get_permissions(self):
-        if self.action == "list":
-            return (IsAuthenticated(),)
-        return super().get_permissions()
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
 
 class CinemaHallViewSet(
@@ -60,12 +50,7 @@ class CinemaHallViewSet(
 ):
     queryset = CinemaHall.objects.all()
     serializer_class = CinemaHallSerializer
-    permission_classes = (IsAdminUser,)
-
-    def get_permissions(self):
-        if self.action == "list":
-            return (IsAuthenticated(),)
-        return super().get_permissions()
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
 
 class MovieViewSet(
@@ -76,12 +61,7 @@ class MovieViewSet(
 ):
     queryset = Movie.objects.prefetch_related("genres", "actors")
     serializer_class = MovieSerializer
-    permission_classes = (IsAdminUser,)
-
-    def get_permissions(self):
-        if self.action in ("list", "retrieve"):
-            return (IsAuthenticated(),)
-        return super().get_permissions()
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
     @staticmethod
     def _params_to_ints(qs):
@@ -172,7 +152,12 @@ class OrderViewSet(
     )
     serializer_class = OrderSerializer
     pagination_class = OrderPagination
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
+
+    def get_permissions(self):
+        if self.action == "create":
+            return (IsAuthenticated(),)
+        return super().get_permissions()
 
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user)
