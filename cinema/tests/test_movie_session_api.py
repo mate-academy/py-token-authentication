@@ -157,6 +157,7 @@ class AdminMovieSessionApiTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+    # this test requires a movie session to be able to be deleted by an admin user
     def test_delete_movie_session(self):
         movie_session = sample_movie_session()
 

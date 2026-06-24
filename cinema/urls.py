@@ -10,7 +10,28 @@ from cinema.views import (
     OrderViewSet,
 )
 
-router = routers.DefaultRouter()
+
+class RestrictedRouter(routers.DefaultRouter):
+    def get_routes(self, viewset):
+        routes = super().get_routes(viewset)
+        if getattr(viewset, "no_detail_route", False):
+            detail_actions = {
+                "retrieve",
+                "update",
+                "partial_update",
+                "destroy"
+            }
+            routes = [
+                route for route in routes
+                if not any(
+                    action in detail_actions
+                    for action in route.mapping.values()
+                )
+            ]
+        return routes
+
+
+router = RestrictedRouter()
 router.register("genres", GenreViewSet)
 router.register("actors", ActorViewSet)
 router.register("cinema_halls", CinemaHallViewSet)
