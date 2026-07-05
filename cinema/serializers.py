@@ -1,6 +1,6 @@
 from django.db import transaction
 from rest_framework import serializers
-
+from django.contrib.auth import get_user_model
 from cinema.models import (
     Genre,
     Actor,

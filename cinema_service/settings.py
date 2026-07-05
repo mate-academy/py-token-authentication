@@ -9,7 +9,8 @@ https://docs.djangoproject.com/en/4.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
-
+import sys
+from copy import copy as _copy
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -25,7 +26,24 @@ SECRET_KEY = (
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+if "test" in sys.argv:
+    DEBUG = False
+    LOGGING_CONFIG = None
+
+    # Workaround: Django's BaseContext.__copy__ relies on a super() proxy
+    # copy pattern that's broken on Python 3.14. Patch it directly, avoiding
+    # any call back into copy.copy() (which would just re-invoke this same
+    # method via the subclass's __copy__ and recurse infinitely).
+    from django.template.context import BaseContext
+
+    def _patched_copy(self):
+        cls = self.__class__
+        duplicate = cls.__new__(cls)
+        duplicate.__dict__.update(self.__dict__)
+        duplicate.dicts = self.dicts[:]
+        return duplicate
+
+    BaseContext.__copy__ = _patched_copy
 
 ALLOWED_HOSTS = []
 
@@ -125,7 +143,7 @@ TIME_ZONE = "UTC"
 
 USE_I18N = True
 
-USE_TZ = False
+USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
@@ -137,3 +155,10 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+    ],
+}
