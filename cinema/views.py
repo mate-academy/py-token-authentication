@@ -1,23 +1,27 @@
 from datetime import datetime
 
-from django.db.models import F, Count
+from django.db.models import Count, F
 from rest_framework import viewsets
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAuthenticated, SAFE_METHODS, BasePermission
+from rest_framework.permissions import (
+    SAFE_METHODS,
+    BasePermission,
+    IsAuthenticated,
+)
 
-from cinema.models import Genre, Actor, CinemaHall, Movie, MovieSession, Order
+from cinema.models import Actor, CinemaHall, Genre, Movie, MovieSession, Order
 from cinema.serializers import (
-    GenreSerializer,
     ActorSerializer,
     CinemaHallSerializer,
-    MovieSerializer,
-    MovieSessionSerializer,
-    MovieSessionListSerializer,
+    GenreSerializer,
     MovieDetailSerializer,
-    MovieSessionDetailSerializer,
     MovieListSerializer,
-    OrderSerializer,
+    MovieSerializer,
+    MovieSessionDetailSerializer,
+    MovieSessionListSerializer,
+    MovieSessionSerializer,
     OrderListSerializer,
+    OrderSerializer,
 )
 
 
@@ -68,9 +72,11 @@ class MovieViewSet(viewsets.ModelViewSet):
         if title:
             queryset = queryset.filter(title__icontains=title)
         if genres:
-            queryset = queryset.filter(genres__id__in=self._params_to_ints(genres))
+            genres_ids = self._params_to_ints(genres)
+            queryset = queryset.filter(genres__id__in=genres_ids)
         if actors:
-            queryset = queryset.filter(actors__id__in=self._params_to_ints(actors))
+            actors_ids = self._params_to_ints(actors)
+            queryset = queryset.filter(actors__id__in=actors_ids)
 
         return queryset.distinct()
 
