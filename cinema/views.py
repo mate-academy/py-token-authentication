@@ -7,7 +7,9 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 
-from cinema.models import (Genre, Actor, CinemaHall, Movie, MovieSession, Order)
+from cinema.models import (
+    Genre, Actor, CinemaHall, Movie, MovieSession, Order
+)
 from cinema.permissions import IsAdminOrIfAuthenticatedReadOnly
 
 from cinema.serializers import (
@@ -150,7 +152,8 @@ class OrderViewSet(
     mixins.CreateModelMixin
 ):
     queryset = Order.objects.prefetch_related(
-        "tickets__movie_session__movie", "tickets__movie_session__cinema_hall"
+        "tickets__movie_session__movie",
+        "tickets__movie_session__cinema_hall"
     )
     serializer_class = OrderSerializer
     pagination_class = OrderPagination
