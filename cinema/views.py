@@ -165,7 +165,6 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
         return MovieSessionSerializer
 
 
-
 class OrderPagination(PageNumberPagination):
     page_size = 10
     max_page_size = 100
