@@ -2,9 +2,18 @@ from datetime import datetime
 
 from django.db.models import F, Count
 from rest_framework import viewsets
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.exceptions import NotFound, MethodNotAllowed
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
 
-from cinema.models import Genre, Actor, CinemaHall, Movie, MovieSession, Order
+from cinema.models import (Genre,
+                           Actor,
+                           CinemaHall,
+                           Movie,
+                           MovieSession,
+                           Order)
+from cinema.permissions import IsAdminOrIfAuthenticatedReadOnly
 
 from cinema.serializers import (
     GenreSerializer,
@@ -24,21 +33,56 @@ from cinema.serializers import (
 class GenreViewSet(viewsets.ModelViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
+
+    def retrieve(self, request, *args, **kwargs):
+        raise NotFound()
+
+    def update(self, request, *args, **kwargs):
+        raise NotFound()
+
+    def destroy(self, request, *args, **kwargs):
+        raise NotFound()
 
 
 class ActorViewSet(viewsets.ModelViewSet):
     queryset = Actor.objects.all()
     serializer_class = ActorSerializer
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
+
+    def retrieve(self, request, *args, **kwargs):
+        raise NotFound()
+
+    def update(self, request, *args, **kwargs):
+        raise NotFound()
+
+    def destroy(self, request, *args, **kwargs):
+        raise NotFound()
 
 
 class CinemaHallViewSet(viewsets.ModelViewSet):
     queryset = CinemaHall.objects.all()
     serializer_class = CinemaHallSerializer
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly, )
+
+    def retrieve(self, request, *args, **kwargs):
+        raise NotFound()
+
+    def update(self, request, *args, **kwargs):
+        raise NotFound()
+
+    def destroy(self, request, *args, **kwargs):
+        raise NotFound()
 
 
 class MovieViewSet(viewsets.ModelViewSet):
     queryset = Movie.objects.prefetch_related("genres", "actors")
     serializer_class = MovieSerializer
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly, )
 
     @staticmethod
     def _params_to_ints(qs):
@@ -75,6 +119,12 @@ class MovieViewSet(viewsets.ModelViewSet):
 
         return MovieSerializer
 
+    def update(self, request, *args, **kwargs):
+        raise MethodNotAllowed(request.method)
+
+    def destroy(self, request, *args, **kwargs):
+        raise MethodNotAllowed(request.method)
+
 
 class MovieSessionViewSet(viewsets.ModelViewSet):
     queryset = (
@@ -87,6 +137,8 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
         )
     )
     serializer_class = MovieSessionSerializer
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly, )
 
     def get_queryset(self):
         date = self.request.query_params.get("date")
@@ -124,6 +176,8 @@ class OrderViewSet(viewsets.ModelViewSet):
     )
     serializer_class = OrderSerializer
     pagination_class = OrderPagination
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated, )
 
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user)
@@ -136,3 +190,12 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+    def retrieve(self, request, *args, **kwargs):
+        raise NotFound()
+
+    def update(self, request, *args, **kwargs):
+        raise NotFound()
+
+    def destroy(self, request, *args, **kwargs):
+        raise NotFound()
