@@ -143,9 +143,6 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
 
         return MovieSessionSerializer
 
-    def destroy(self, request, *args, **kwargs):
-        raise MethodNotAllowed("DELETE")
-
 
 class OrderPagination(PageNumberPagination):
     page_size = 10
