@@ -1,4 +1,3 @@
-# write your code here
 from user.views import CreateTokenView, UserView, CreateUserView
 from django.urls import path
 
