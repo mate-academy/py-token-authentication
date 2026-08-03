@@ -1,8 +1,14 @@
 from datetime import datetime
-
 from django.db.models import F, Count
 from rest_framework import viewsets
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import (
+    BasePermission,
+    SAFE_METHODS,
+    IsAuthenticated
+)
+from rest_framework.authentication import TokenAuthentication
+from django.http import Http404
 
 from cinema.models import Genre, Actor, CinemaHall, Movie, MovieSession, Order
 
@@ -21,24 +27,59 @@ from cinema.serializers import (
 )
 
 
+class IsAdminOrIfAuthenticatedReadOnly(BasePermission):
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS:
+            return request.user and request.user.is_authenticated
+
+        return request.user and request.user.is_staff
+
+
 class GenreViewSet(viewsets.ModelViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAdminOrIfAuthenticatedReadOnly]
+
+    def initial(self, request, *args, **kwargs):
+        if self.action not in ("list", "create"):
+            raise Http404
+
+        super().initial(request, *args, **kwargs)
 
 
 class ActorViewSet(viewsets.ModelViewSet):
     queryset = Actor.objects.all()
     serializer_class = ActorSerializer
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAdminOrIfAuthenticatedReadOnly]
+
+    def initial(self, request, *args, **kwargs):
+        if self.action not in ("list", "create"):
+            raise Http404
+
+        super().initial(request, *args, **kwargs)
 
 
 class CinemaHallViewSet(viewsets.ModelViewSet):
     queryset = CinemaHall.objects.all()
     serializer_class = CinemaHallSerializer
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAdminOrIfAuthenticatedReadOnly]
+
+    def initial(self, request, *args, **kwargs):
+        if self.action not in ("list", "create"):
+            raise Http404
+
+        super().initial(request, *args, **kwargs)
 
 
 class MovieViewSet(viewsets.ModelViewSet):
     queryset = Movie.objects.prefetch_related("genres", "actors")
     serializer_class = MovieSerializer
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAdminOrIfAuthenticatedReadOnly]
+    http_method_names = ["get", "post"]
 
     @staticmethod
     def _params_to_ints(qs):
@@ -87,6 +128,8 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
         )
     )
     serializer_class = MovieSessionSerializer
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAdminOrIfAuthenticatedReadOnly]
 
     def get_queryset(self):
         date = self.request.query_params.get("date")
@@ -124,6 +167,18 @@ class OrderViewSet(viewsets.ModelViewSet):
     )
     serializer_class = OrderSerializer
     pagination_class = OrderPagination
+    authentication_classes = [TokenAuthentication]
+
+    def initial(self, request, *args, **kwargs):
+        if self.action not in ("list", "create"):
+            raise Http404
+
+        super().initial(request, *args, **kwargs)
+
+    def get_permissions(self):
+        if self.action == "create":
+            return [IsAuthenticated()]
+        return [IsAdminOrIfAuthenticatedReadOnly()]
 
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user)
