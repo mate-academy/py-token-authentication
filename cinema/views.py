@@ -4,10 +4,10 @@ from django.db.models import F, Count
 from rest_framework import viewsets, mixins
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
 
 from cinema.permissions import (
     IsAdminOrIfAuthenticatedReadOnly,
-    IsAuthenticatedOrCreate
 )
 
 from cinema.models import Genre, Actor, CinemaHall, Movie, MovieSession, Order
@@ -151,7 +151,7 @@ class OrderViewSet(
     mixins.CreateModelMixin,
     GenericViewSet
 ):
-    permission_classes = (IsAuthenticatedOrCreate,)
+    permission_classes = (IsAuthenticated,)
     queryset = Order.objects.prefetch_related(
         "tickets__movie_session__movie", "tickets__movie_session__cinema_hall"
     )

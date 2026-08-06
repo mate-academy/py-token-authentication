@@ -1,20 +1,13 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
-from rest_framework.exceptions import NotAuthenticated
 
 
 class IsAdminOrIfAuthenticatedReadOnly(BasePermission):
     def has_permission(self, request, view):
-        if not request.user or not request.user.is_authenticated:
-            raise NotAuthenticated()
-
-        return bool(
+        is_authenticated_read_only = (
             request.method in SAFE_METHODS
-            or request.user.is_staff
+            and request.user
+            and request.user.is_authenticated
         )
+        is_admin = request.user and request.user.is_staff
 
-
-class IsAuthenticatedOrCreate(BasePermission):
-    def has_permission(self, request, view):
-        if not request.user or not request.user.is_authenticated:
-            raise NotAuthenticated()
-        return True
+        return bool(is_authenticated_read_only or is_admin)
