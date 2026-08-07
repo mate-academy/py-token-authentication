@@ -1,12 +1,9 @@
 from rest_framework import generics, mixins
 from rest_framework.authtoken.views import ObtainAuthToken
-from rest_framework.decorators import permission_classes
 from rest_framework.serializers import api_settings
-from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from user.serializers import UserSerializer
-
 
 
 class CreateUserView(generics.CreateAPIView):
