@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "rest_framework.authtoken",
-    #"debug_toolbar",
+    # "debug_toolbar",
     "cinema",
     "user",
 ]

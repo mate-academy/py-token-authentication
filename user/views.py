@@ -1,7 +1,7 @@
 from rest_framework import generics, mixins
 from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.serializers import api_settings
-from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from user.serializers import UserSerializer
 
@@ -22,4 +22,3 @@ class ManageUserView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
-
