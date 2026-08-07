@@ -78,7 +78,7 @@ class MovieViewSet(
         genres = self.request.query_params.get("genres")
         actors = self.request.query_params.get("actors")
 
-        queryset = self.queryset
+        queryset = super().get_queryset()
 
         if title:
             queryset = queryset.filter(title__icontains=title)
@@ -159,7 +159,7 @@ class OrderViewSet(
     pagination_class = OrderPagination
 
     def get_queryset(self):
-        return Order.objects.filter(user=self.request.user)
+        return super().get_queryset().filter(user=self.request.user)
 
     def get_serializer_class(self):
         if self.action == "list":
