@@ -64,6 +64,24 @@ class PrivateOrderApiTests(TestCase):
 
         self.assertNotEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_post_order_with_ticket(self):
+        movie_session = sample_movie_session()
+        payload = {
+            "tickets": [
+                {
+                    "movie_session": movie_session.id,
+                    "row": 1,
+                    "seat": 1,
+                }
+            ]
+        }
+
+        response = self.client.post(ORDER_URL, payload, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Order.objects.filter(user=self.user).count(), 1)
+        self.assertEqual(Ticket.objects.filter(order__user=self.user).count(), 1)
+
     def test_retrieve_order(self):
         order = sample_order(user=self.user)
         sample_ticket(order)
