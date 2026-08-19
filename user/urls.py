@@ -1,10 +1,13 @@
 from django.urls import path
-from user.views import CreateTokenView, CreateUserView, ManageUserView
+from rest_framework.authtoken.views import obtain_auth_token
+
+from user.views import CreateUserView, ManageUserView
 
 app_name = "user"
 
 urlpatterns = [
     path("register/", CreateUserView.as_view(), name="create"),
-    path("login/", CreateTokenView.as_view(), name="login"),
+    path("token/", obtain_auth_token, name="token"),
+    path("login/", obtain_auth_token, name="login"),
     path("me/", ManageUserView.as_view(), name="manage"),
 ]
