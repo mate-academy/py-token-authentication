@@ -1,19 +1,13 @@
-from django.contrib.auth import get_user_model, authenticate
-from django.utils.translation import gettext_lazy as _
+from django.contrib.auth import authenticate, get_user_model
 from rest_framework import serializers
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
-        fields = ("id", "email", "password", "username", "is_staff")
+        fields = ("id", "username", "email", "password", "is_staff")
         read_only_fields = ("id", "is_staff")
-        extra_kwargs = {
-            "password": {
-                "write_only": True,
-                "min_length": 5,
-            }
-        }
+        extra_kwargs = {"password": {"write_only": True, "min_length": 5}}
 
     def create(self, validated_data):
         return get_user_model().objects.create_user(**validated_data)
@@ -30,36 +24,33 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class AuthTokenSerializer(serializers.Serializer):
-    email = serializers.CharField(label=_("Email"), write_only=True)
+    email = serializers.CharField()
     password = serializers.CharField(
-        label=_("Password"),
         style={"input_type": "password"},
         trim_whitespace=False,
-        write_only=True,
     )
-    token = serializers.CharField(label=_("Token"), read_only=True)
 
     def validate(self, attrs):
         email = attrs.get("email")
         password = attrs.get("password")
 
-        if email and password:
-            user = authenticate(
-                request=self.context.get("request"),
-                username=email,
-                password=password,
-            )
-            if not user:
-                user = get_user_model().objects.filter(email=email).first()
-                if user and user.check_password(password):
-                    attrs["user"] = user
-                    return attrs
+        user = authenticate(
+            request=self.context.get("request"),
+            username=email,
+            password=password,
+        )
 
-                msg = _("Unable to authenticate with provided credentials.")
-                raise serializers.ValidationError(msg, code="authorization")
-        else:
-            msg = _('Must include "email" and "password".')
-            raise serializers.ValidationError(msg, code="authorization")
+        if not user:
+            user_model = get_user_model()
+            try:
+                user_obj = user_model.objects.get(email=email)
+                if user_obj.check_password(password):
+                    user = user_obj
+            except user_model.DoesNotExist:
+                user = None
+
+        if not user:
+            raise serializers.ValidationError("Unable to authenticate")
 
         attrs["user"] = user
         return attrs
