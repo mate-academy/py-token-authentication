@@ -1,7 +1,4 @@
-from django.contrib.auth.views import LogoutView
 from django.urls import path
-from rest_framework.authtoken import views
-
 from user.views import CreateUserView, LoginUserView, ManageUserView
 
 urlpatterns = [
