@@ -1,9 +1,4 @@
-        modified:   user/urls.py
-        modified:   user/views.py
 
-no changes added to commit (use "git add" and/or "git commit -a")
-
-illuha@DESKTOP-NVBFBTG MINGW64 ~/Documents/py-token-authentication (develop)
 $ # Database
 db.sqlite3
 *.sqlite3
