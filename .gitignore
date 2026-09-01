@@ -1,10 +1,29 @@
+        modified:   user/urls.py
+        modified:   user/views.py
+
+no changes added to commit (use "git add" and/or "git commit -a")
+
+illuha@DESKTOP-NVBFBTG MINGW64 ~/Documents/py-token-authentication (develop)
+$ # Database
+db.sqlite3
+*.sqlite3
+*.db
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+.venv/
+venv/
+
+# IDE
 .idea/
 .vscode/
-*.iml
+
+# Environment variables
 .env
+
+# OS
 .DS_Store
-venv/
-.pytest_cache/
-**__pycache__/
-*.pyc
-**db.sqlite3
+Thumbs.d
