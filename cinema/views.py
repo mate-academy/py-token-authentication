@@ -32,7 +32,7 @@ class GenreViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action in ("list", "create"):
-            return [IsAdminOrIfAuthenticatedReadOnly()]
+            return (IsAdminOrIfAuthenticatedReadOnly(),)
         else:
             raise Http404
 
@@ -44,7 +44,7 @@ class ActorViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action in ("list", "create"):
-            return [IsAdminOrIfAuthenticatedReadOnly()]
+            return (IsAdminOrIfAuthenticatedReadOnly(),)
         else:
             raise Http404
 
@@ -56,7 +56,7 @@ class CinemaHallViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action in ("list", "create"):
-            return [IsAdminOrIfAuthenticatedReadOnly()]
+            return (IsAdminOrIfAuthenticatedReadOnly(),)
         else:
             raise Http404
 
@@ -116,7 +116,7 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
     )
     serializer_class = MovieSessionSerializer
     authentication_classes = (TokenAuthentication,)
-    permission_classes = [IsAdminOrIfAuthenticatedReadOnly]
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
     def get_queryset(self):
         date = self.request.query_params.get("date")
@@ -158,7 +158,7 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action in ("list", "create"):
-            return [IsAuthenticated()]
+            return (IsAuthenticated(),)
         else:
             raise Http404
 
