@@ -178,6 +178,9 @@ class OrderViewSet(viewsets.ModelViewSet):
             raise NotFound()
 
     def get_queryset(self):
+        if self.request.user.is_staff:
+            return self.queryset.all()
+
         return Order.objects.filter(user=self.request.user)
 
     def get_serializer_class(self):
