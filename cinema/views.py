@@ -28,17 +28,23 @@ class BaseCinemaViewSet(viewsets.GenericViewSet):
     permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
 
-class GenreViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, BaseCinemaViewSet):
+class GenreViewSet(
+    mixins.ListModelMixin, mixins.CreateModelMixin, BaseCinemaViewSet
+):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
 
 
-class ActorViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, BaseCinemaViewSet):
+class ActorViewSet(
+    mixins.ListModelMixin, mixins.CreateModelMixin, BaseCinemaViewSet
+):
     queryset = Actor.objects.all()
     serializer_class = ActorSerializer
 
 
-class CinemaHallViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, BaseCinemaViewSet):
+class CinemaHallViewSet(
+    mixins.ListModelMixin, mixins.CreateModelMixin, BaseCinemaViewSet
+):
     queryset = CinemaHall.objects.all()
     serializer_class = CinemaHallSerializer
 
@@ -130,15 +136,15 @@ class OrderPagination(PageNumberPagination):
     max_page_size = 100
 
 
-class OrderViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
+class OrderViewSet(
+    mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet
+):
     queryset = Order.objects.prefetch_related(
         "tickets__movie_session__movie", "tickets__movie_session__cinema_hall"
     )
     serializer_class = OrderSerializer
     pagination_class = OrderPagination
     authentication_classes = (TokenAuthentication,)
-    # Здесь используем стандартный IsAuthenticated из DRF,
-    # так как по заданию заказы могут делать любые авторизованные пользователи
     from rest_framework.permissions import IsAuthenticated
     permission_classes = (IsAuthenticated,)
 
