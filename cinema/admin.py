@@ -10,10 +10,11 @@ from .models import (
     Ticket,
 )
 
-admin.site.register(CinemaHall)
-admin.site.register(Genre)
-admin.site.register(Actor)
-admin.site.register(Movie)
-admin.site.register(MovieSession)
-admin.site.register(Order)
-admin.site.register(Ticket)
+
+class NoDeleteAdmin(admin.ModelAdmin):
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+for model in (CinemaHall, Genre, Actor, Movie, MovieSession, Order, Ticket):
+    admin.site.register(model, NoDeleteAdmin)

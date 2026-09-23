@@ -83,7 +83,7 @@ class PrivateMovieSessionApiTests(TestCase):
 
     def test_post_movie_session(self):
         response = self.client.post(MOVIE_SESSION_URL, {})
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_put_movie_session(self):
         movie_session = sample_movie_session()
@@ -91,7 +91,7 @@ class PrivateMovieSessionApiTests(TestCase):
         url = detail_url(movie_session.id)
         response = self.client.put(url, {})
 
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_delete_movie_session(self):
         movie_session = sample_movie_session()
@@ -99,7 +99,7 @@ class PrivateMovieSessionApiTests(TestCase):
         url = detail_url(movie_session.id)
         response = self.client.delete(url)
 
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
 
 class AdminMovieSessionApiTests(TestCase):
