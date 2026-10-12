@@ -1,6 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.password_validation import validate_password
-from django.core.validators import MinValueValidator
+from django.core.validators import MinLengthValidator
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 
@@ -9,7 +8,7 @@ User = get_user_model()
 
 class RegisterUserSerializer(ModelSerializer):
     password = serializers.CharField(
-        write_only=True, validators=[MinValueValidator(5)]
+        write_only=True, validators=[MinLengthValidator(5)]
     )
 
     class Meta:
