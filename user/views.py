@@ -4,7 +4,7 @@ from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.settings import api_settings
 
-from user.serializers import RegisterUserSerializer, UserSerializer
+from user.serializers import RegisterUserSerializer
 
 
 class RegisterUserView(CreateAPIView):
