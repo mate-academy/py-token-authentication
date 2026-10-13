@@ -133,6 +133,15 @@ USE_TZ = False
 
 STATIC_URL = "static/"
 
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework.authentication.TokenAuthentication",
+    ),
+    "DEFAULT_PERMISSION_CLASSES": (
+        "cinema.permissions.IsAdminOrIfAuthenticatedReadOnly",
+    ),
+}
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
