@@ -118,7 +118,10 @@ class Ticket(models.Model):
     ):
         self.full_clean()
         return super(Ticket, self).save(
-            force_insert, force_update, using, update_fields
+            force_insert=force_insert,
+            force_update=force_update,
+            using=using,
+            update_fields=update_fields,
         )
 
     def __str__(self):
