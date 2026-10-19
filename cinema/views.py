@@ -185,6 +185,4 @@ class OrderViewSet(
         serializer.save(user=self.request.user)
 
     def get_permissions(self):
-        if self.action in ["create", "list"]:
-            return [IsAuthenticated()]
-        return [IsAdminUser()]
+        return [IsAuthenticated()]
