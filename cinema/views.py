@@ -1,15 +1,21 @@
 from datetime import datetime
 
 from django.db.models import F, Count
-from rest_framework import mixins
+from rest_framework import mixins, viewsets
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.viewsets import GenericViewSet
 
-from .models import Genre, Actor, CinemaHall, Movie, MovieSession, Order
-
-from .serializers import (
+from cinema.models import (
+    Genre,
+    Actor,
+    CinemaHall,
+    Movie,
+    MovieSession,
+    Order
+)
+from cinema.serializers import (
     GenreSerializer,
     ActorSerializer,
     CinemaHallSerializer,
@@ -22,7 +28,7 @@ from .serializers import (
     OrderSerializer,
     OrderListSerializer,
 )
-from .permissions import IsAdminOrIfAuthenticatedReadOnly
+from cinema.permissions import IsAdminOrIfAuthenticatedReadOnly
 
 
 class GenreViewSet(
@@ -109,14 +115,7 @@ class MovieViewSet(
         return MovieSerializer
 
 
-class MovieSessionViewSet(
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    mixins.RetrieveModelMixin,
-    mixins.UpdateModelMixin,
-    mixins.DestroyModelMixin,
-    GenericViewSet
-):
+class MovieSessionViewSet(viewsets.ModelViewSet):
     queryset = (
         MovieSession.objects.all()
         .select_related("movie", "cinema_hall")
