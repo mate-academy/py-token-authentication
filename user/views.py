@@ -1,1 +1,19 @@
-# write your code here
+from django.contrib.auth.models import AbstractBaseUser
+from rest_framework import generics
+from rest_framework.permissions import AllowAny, IsAuthenticated
+
+from user.serializers import UserSerializer
+
+
+class CreateUserView(generics.CreateAPIView):
+    serializer_class = UserSerializer
+    permission_classes = (AllowAny,)
+    authentication_classes = ()
+
+
+class ManageUserView(generics.RetrieveUpdateAPIView):
+    serializer_class = UserSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_object(self) -> AbstractBaseUser:
+        return self.request.user
