@@ -1,4 +1,4 @@
-from django.db import transaction
+from django.db.transaction import atomic
 from rest_framework import serializers
 
 from cinema.models import (
@@ -86,7 +86,10 @@ class TicketSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         data = super(TicketSerializer, self).validate(attrs=attrs)
         Ticket.validate_ticket(
-            attrs["row"], attrs["seat"], attrs["movie_session"]
+            attrs["row"],
+            attrs["seat"],
+            attrs["movie_session"],
+            serializers.ValidationError
         )
         return data
 
@@ -125,7 +128,7 @@ class OrderSerializer(serializers.ModelSerializer):
         fields = ("id", "tickets", "created_at")
 
     def create(self, validated_data):
-        with transaction.atomic():
+        with atomic():
             tickets_data = validated_data.pop("tickets")
             order = Order.objects.create(**validated_data)
             for ticket_data in tickets_data:
