@@ -70,7 +70,7 @@ class PrivateOrderApiTests(TestCase):
 
         response = self.client.get(f"{ORDER_URL}1/")
 
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_put_order(self):
         order = sample_order(user=self.user)
@@ -78,7 +78,7 @@ class PrivateOrderApiTests(TestCase):
         sample_ticket(order)
 
         response = self.client.put(f"{ORDER_URL}1/", {})
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_delete_order(self):
         order = sample_order(user=self.user)
@@ -86,7 +86,7 @@ class PrivateOrderApiTests(TestCase):
         sample_ticket(order)
 
         response = self.client.delete(f"{ORDER_URL}1/")
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
 class AdminOrderApiTests(TestCase):
