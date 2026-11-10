@@ -16,12 +16,9 @@ class CreateTokenView(ObtainAuthToken):
     permission_classes = [AllowAny]
 
 
-class ManageUserView(generics.RetrieveUpdateDestroyAPIView):
+class ManageUserView(generics.RetrieveUpdateAPIView):
     serializer_class = UserSerializer
     permission_classes = (IsAuthenticated,)
 
     def get_object(self):
         return self.request.user
-
-    def get_queryset(self):
-        return self.request.user.__class__.objects.all()
