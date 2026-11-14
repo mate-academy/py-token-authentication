@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView
@@ -17,3 +18,6 @@ class ManageUserView(RetrieveUpdateAPIView):
     serializer_class = UserSerializer
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
+
+    def get_object(self):
+        return self.request.user
