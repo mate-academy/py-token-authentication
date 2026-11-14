@@ -11,8 +11,10 @@ from user.serializers import UserSerializer
 class CreateUserView(CreateAPIView):
     serializer_class = UserSerializer
 
+
 class LoginUserView(ObtainAuthToken):
     renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
+
 
 class ManageUserView(RetrieveUpdateAPIView):
     serializer_class = UserSerializer
