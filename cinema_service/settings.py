@@ -78,6 +78,15 @@ TEMPLATES = [
     },
 ]
 
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "user.permissions.IsAdminOrIfAuthenticatedReadOnly",
+    ]
+}
+
 WSGI_APPLICATION = "cinema_service.wsgi.application"
 
 
