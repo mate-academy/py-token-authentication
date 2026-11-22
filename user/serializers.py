@@ -4,6 +4,15 @@ from rest_framework import serializers
 
 class UserSerializer(serializers.ModelSerializer):
 
+    def update(self, instance, validated_data):
+        password = validated_data.pop("password", None)
+        user = super().update(instance, validated_data)
+        if password:
+            user.set_password(password)
+            user.save()
+        return user
+
+
     class Meta:
         model = get_user_model()
         fields = (
